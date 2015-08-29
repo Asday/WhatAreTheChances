@@ -23,8 +23,11 @@ Once that's done, save it, and run `main.pyw`.
 What are the Chances depends upon only a few things; below I've provided the download links for them for windows.
 
 [Python](https://www.python.org/ftp/python/2.7.10/python-2.7.10.msi)
+
 [Pygame](http://pygame.org/ftp/pygame-1.9.1.win32-py2.7.msi)
+
 [wx](http://downloads.sourceforge.net/wxpython/wxPython3.0-win32-3.0.2.0-py27.exe)
+
 [Virustotal](http://www.virustotal.com), because you should never trust random download links to executables.
 
 For Linux users, this _should_ work, just get wxpython 3+, Python 2.7, and pygame1.9.x, but no promises, (and what are you doing trying to game on linux?)
