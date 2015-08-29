@@ -20,6 +20,30 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="config.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="interface\img.py" />
+    <Compile Include="interface\mainframe.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="interface\trayicon.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="interface\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="main.pyw">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="interface\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="README.md" />
+  </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />
 </Project>
