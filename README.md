@@ -6,9 +6,15 @@
 
 What are the Chances is a parasite, feeding on Acquisition's data.  If you're logged into Acquisition, and it's keeping your items updated, you can use this program.
 
+Because it just takes the data from Acquisition, you don't even need to give it your password.  Or username.  Or anything.  So long as Acquisition is working and running, this'll work just fine.
+
 In return for the delicious data feed, What are the Chances finds recipes for you, and sorts them into inventory sized chunks, for easy vendoring.
 
 As it stands, What are the Chances only finds Chance/Alchemy orb recipes.  Personally I don't find it hard to do any of the other ones manually, so I didn't bother including them, but it's expandable.
+
+The reason I made this, is because Procurement has the functionality to search for chance recipes for you, but Procurement sucks, and even the recipe functionality is minimal.  (No offence @Stickymaddness).
+
+Check out the demo [here](http://youtu.be/5gffb8iLKc0).
 
 ## How to use it
 
