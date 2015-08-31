@@ -2,18 +2,24 @@ import json
 
 import wx
 import pygame
+import pygame.gfxdraw
 
 import img
 
-black = pygame.surface.Surface((120, 120))
-black.fill(0x000000)
+grid = pygame.surface.Surface((120, 120))
+grid.fill(0x000000)
+gridcolour = pygame.color.Color(104, 104, 104)
+itemcolour = pygame.color.Color(255, 0, 0)
+for offset in xrange(10, 120, 10):
+    pygame.gfxdraw.line(grid, offset, 0, offset, 120, gridcolour)
+    pygame.gfxdraw.line(grid, 0, offset, 120, offset, gridcolour)
 
 def make_preview(item):
     x, y, w, h = item["x"], item["y"], item["w"], item["h"]
-    surf = black.copy()
+    surf = grid.copy()
 
     itemblock = pygame.surface.Surface((w*10, h*10))
-    itemblock.fill(0xFF0000)
+    itemblock.fill(itemcolour)
 
     surf.blit(itemblock, (x*10, y*10))
 
@@ -56,7 +62,7 @@ class Main(wx.Frame):
                 panel = wx.Panel(self.panel_items, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.SUNKEN_BORDER | wx.TAB_TRAVERSAL)
                 sizer = wx.BoxSizer(wx.VERTICAL)
                 preview["bitmap"] = wx.StaticBitmap(panel, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size(120, 120), 0)
-                img.show_pygame_surf_in_wxBitmap(black, preview["bitmap"])
+                img.show_pygame_surf_in_wxBitmap(grid, preview["bitmap"])
                 sizer.Add(preview["bitmap"], 0, 0, 5)
                 panel.SetSizer(sizer)
                 panel.Layout()
@@ -152,5 +158,5 @@ class Main(wx.Frame):
         for col in self.previews:
             for preview in col:
                 preview["sizer"].StaticBox.SetLabel(" ")
-                img.show_pygame_surf_in_wxBitmap(black, preview["bitmap"])
+                img.show_pygame_surf_in_wxBitmap(grid, preview["bitmap"])
         self.Thaw()
