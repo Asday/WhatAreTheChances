@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{7c1c3dd9-59e4-4050-b5e1-17f578a78b94}</ProjectGuid>
     <ProjectHome />
-    <StartupFile />
+    <StartupFile>main.pyw</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -21,6 +21,9 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="autoupdater.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="config.py">
       <SubType>Code</SubType>
     </Compile>
@@ -28,7 +31,13 @@
     <Compile Include="interface\mainframe.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="interface\settings.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="interface\trayicon.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="interface\update.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="interface\__init__.py">
@@ -37,11 +46,15 @@
     <Compile Include="main.pyw">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="version.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="interface\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="interface\todo.txt" />
     <Content Include="README.md" />
   </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />

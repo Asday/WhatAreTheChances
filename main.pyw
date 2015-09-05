@@ -8,6 +8,7 @@ import wx
 
 import interface
 import config
+import autoupdater
 
 if os.name == "nt":
     datadir = os.path.join(os.path.expanduser("~"), 
@@ -114,7 +115,7 @@ def get_probable_fpath():
 
     return os.path.join(datadir, probably)
 
-def get_items(fpath_db):
+def get_items(fpath_db, stash_tabs):
     try:
         d = sqlite3.connect(fpath_db)
         c = d.execute("SELECT value FROM data WHERE key = 'items'")
@@ -123,7 +124,7 @@ def get_items(fpath_db):
         j = [x for x in j
                 if ("name" in x.keys())
                 and ("_tab_label" in x.keys())
-                and (x["_tab_label"] in config.stash_tabs)]
+                and (x["_tab_label"] in stash_tabs)]
         assert len(j) > 0
     except:
         return False
@@ -185,7 +186,7 @@ class AcquisitionThread(threading.Thread):
     def run(self):
         while self._app.alive:
             fpath = os.path.join(datadir, get_probable_fpath())
-            items = get_items(fpath)
+            items = get_items(fpath, self._app.settings["stash_tabs"])
             if not (items and items[1] > self._app.last_update):
                 time.sleep(config.sleepytime)
                 continue
@@ -245,30 +246,57 @@ class App(wx.App):
     def __init__(self):
         super(App, self).__init__()
 
+        try:
+            with file("settings.cfg", "r") as f:
+                self.settings = json.load(f)
+                if not isinstance(self.settings, dict):
+                    self.settings = {"stash_tabs": []}
+        except IOError:
+            self.settings = {"stash_tabs": []}
+
         self._trayicon = interface.trayicon.Main(self)
         self._mainframe = None
+        self._updateframe = None
+        self._settingsframe = None
 
         self.lock = threading.Lock()
         self.inventories = None
         self.alive = True
         self.last_update = 0
+
         self._thread = AcquisitionThread(self)
+        self._updater = autoupdater.Updater(self, self._update_available,
+                                            "Asday", "WhatAreTheChances")
+        self.update_available = False
 
         self._thread.start()
+        self._updater.start()
+
+        if not self.settings["stash_tabs"]:
+            wx.CallAfter(self.launch_settings_window)
 
         self.MainLoop()
 
         self.alive = False
         self._thread.join()
+        self._updater.join()
+
+        try:
+            with file("settings.cfg", "w") as f:
+                json.dump(self.settings, f)
+        except IOError:
+            pass
 
     def launch_mainframe(self):
         #Load window position
         try:
-            with file("settings.cfg", "r") as f:
-                x, y, w, h = json.load(f)
-                position = (x, y)
-                size = (w, h)
-        except IOError:
+            x = self.settings["main_x"]
+            y = self.settings["main_y"]
+            w = self.settings["main_w"]
+            h = self.settings["main_h"]
+            position = (x, y)
+            size = (w, h)
+        except KeyError:
             position = wx.DefaultPosition
             size = (1280, 720)
 
@@ -280,13 +308,62 @@ class App(wx.App):
         self._mainframe.SetWindowStyle(style)
 
     def mainframe_closed(self, x, y, w, h):
-        try:
-            with file("settings.cfg", "w") as f:
-                json.dump([x, y, w, h], f)
-        except IOError:
-            pass #No write access probably, whatever
+        self.settings.update(
+            {"main_x": x,
+             "main_y": y,
+             "main_w": w,
+             "main_h": h}
+            )
 
         self._mainframe = None
+
+    def launch_update_window(self):
+        try:
+            x = self.settings["update_x"]
+            y = self.settings["update_y"]
+            w = self.settings["update_w"]
+            h = self.settings["update_h"]
+            position = (x, y)
+            size = (w, h)
+        except KeyError:
+            position = wx.DefaultPosition
+            size = (500, 537)
+
+        self._updateframe = interface.update.Main(self, self.local_version,
+                                                  self.remote_version,
+                                                  self.patch_notes,
+                                                  position, size)
+
+    def update_window_closed(self, x, y, w, h):
+        self.settings.update(
+            {"update_x": x,
+             "update_y": y,
+             "update_w": w,
+             "update_h": h}
+            )
+
+        self._updateframe = None
+
+    def launch_settings_window(self):
+        if not self._settingsframe:
+            self._settingsframe = interface.settings.Main(self)
+        style = self._settingsframe.GetWindowStyle()
+        self._settingsframe.SetWindowStyle(style | wx.STAY_ON_TOP)
+        self._settingsframe.Raise()
+        self._settingsframe.SetWindowStyle(style)
+
+    def settings_window_closed(self):
+        self._settingsframe = None
+
+    def check_for_updates(self):
+        self._updater.check_now()
+
+    def _update_available(self, local_version, remote_version, patch_notes):
+        self.update_available = True
+        self.local_version = local_version
+        self.remote_version = remote_version
+        self.patch_notes = patch_notes
+        self._trayicon.update_available()
 
     def inventories_updated(self, new_recipes):
         if self._mainframe:
@@ -295,10 +372,26 @@ class App(wx.App):
         if new_recipes:
             wx.CallAfter(self._trayicon.new_recipes, new_recipes)
 
+    def ignore_update(self):
+        self._updater.ignore_remote_version()
+
+    def update(self):
+        wx.MessageBox("Pretending to update!")
+
     def quit(self):
         self._trayicon.RemoveIcon()
         try:
             self._mainframe.Hide()
+        except AttributeError:
+            pass
+
+        try:
+            self._updateframe.Hide()
+        except AttributeError:
+            pass
+
+        try:
+            self._settingsframe.Hide()
         except AttributeError:
             pass
 
