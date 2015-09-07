@@ -107,32 +107,36 @@ def chancerecipes(items):
 def _nameorder(item):
     return item["name"]
 
-def get_probable_fpath():
-    def k(x):
+def get_probable_fpaths():
+    def mtime(x):
         return os.path.getmtime(os.path.join(datadir, x))
 
-    probably = max(os.listdir(datadir), key = k)
+    probably = sorted(os.listdir(datadir), key = mtime)
 
-    return os.path.join(datadir, probably)
+    return (os.path.join(datadir, fpath) for fpath in probably)
 
-def get_items(fpath_db, stash_tabs):
-    try:
-        d = sqlite3.connect(fpath_db)
-        c = d.execute("SELECT value FROM data WHERE key = 'items'")
-        r = c.fetchone()
-        j = json.loads(str(r[0]))
-        j = [x for x in j
-                if ("name" in x.keys())
-                and ("_tab_label" in x.keys())
-                and (x["_tab_label"] in stash_tabs)]
-        assert len(j) > 0
-    except:
+def get_items(fpaths_db, stash_tabs):
+    for path in fpaths_db:
+        try:
+            d = sqlite3.connect(path)
+            c = d.execute("SELECT value FROM data WHERE key = 'items'")
+            r = c.fetchone()
+            j = json.loads(str(r[0]))
+            j = [x for x in j
+                    if ("name" in x.keys())
+                    and ("_tab_label" in x.keys())
+                    and (x["_tab_label"] in stash_tabs)]
+            assert len(j) > 0
+            break
+        except:
+            pass
+    else: #nobreak
         return False
 
     for item in j:
         item["name"] = item["name"].rsplit(">")[-1]
 
-    return (j, os.path.getmtime(fpath_db))
+    return (j, os.path.getmtime(path))
 
 class Inventory(object):
     def __init__(self):
@@ -185,8 +189,8 @@ class AcquisitionThread(threading.Thread):
 
     def run(self):
         while self._app.alive:
-            fpath = os.path.join(datadir, get_probable_fpath())
-            items = get_items(fpath, self._app.settings["stash_tabs"])
+            items = get_items(get_probable_fpaths(),
+                              self._app.settings["stash_tabs"])
             if not (items and items[1] > self._app.last_update):
                 time.sleep(config.sleepytime)
                 continue
@@ -374,6 +378,7 @@ class App(wx.App):
 
     def ignore_update(self):
         self._updater.ignore_remote_version()
+        self.update_available = False
 
     def update(self):
         wx.MessageBox("Pretending to update!")

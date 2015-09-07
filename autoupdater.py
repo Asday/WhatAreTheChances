@@ -1,6 +1,6 @@
 import time
 import json
-import requests
+import urllib2
 import threading
 
 import version
@@ -38,14 +38,15 @@ class Updater(threading.Thread):
 
     def _get_github_file(self, fname, readlines = False):
         url = self._get_github_stub() + fname
-        res = requests.get(url)
-        if res.status_code != 200:
+        try:
+            res = urllib2.urlopen(url)
+        except urllib2.HTTPError:
             return [] if readlines else ""
 
         if readlines:
-            remote = res.text.split("\n")
+            remote = res.readlines()
         else:
-            remote = res.text
+            remote = res.read()
         
         return remote
 

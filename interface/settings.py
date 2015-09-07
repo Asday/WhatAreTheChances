@@ -6,7 +6,9 @@ class Main(wx.Frame):
         self._updated = True
 
         if self._app.settings["stash_tabs"]:
-            lowest, highest, extras = self._decode_stash_tabs()
+            lowest = self._app.settings["stash_tabs_lowest"]
+            highest = self._app.settings["stash_tabs_highest"]
+            extras = ",".join(self._app.settings["stash_tabs_extras"])
         else:
             lowest = 0
             highest = 65
@@ -92,20 +94,6 @@ class Main(wx.Frame):
         self.text_unnumbered.Bind(wx.EVT_TEXT, self._on_updated)
         self.button_check_for_updates.Bind(wx.EVT_BUTTON, self._on_check)
 
-    def _decode_stash_tabs(self):
-        numerical = []
-        nonnumerical = []
-
-        for tab in self._app.settings["stash_tabs"]:
-            try:
-                int(tab)
-                numerical.append(tab)
-            except ValueError:
-                nonnumerical.append(tab)
-
-        numerical.sort(key = int)
-        return numerical[0], numerical[-1], ",".join(nonnumerical)
-
     def _on_updated(self, event):
         self._updated = True
 
@@ -113,12 +101,15 @@ class Main(wx.Frame):
         if self._updated:
             lowest = self.spin_from.GetValue()
             highest = self.spin_to.GetValue()
-            extras = self.text_unnumbered.GetValue().split(",")
-            stash_tabs = range(lowest, highest + 1)
+            extras = [tabname.strip() for tabname in 
+                      self.text_unnumbered.GetValue().split(",")]
+            stash_tabs = [str(x) for x in xrange(lowest, highest + 1)]
             stash_tabs.extend(extras)
             self._app.settings["stash_tabs"] = stash_tabs
+            self._app.settings["stash_tabs_lowest"] = lowest
+            self._app.settings["stash_tabs_highest"] = highest
+            self._app.settings["stash_tabs_extras"] = extras
             self._updated = False
-            print("updated yo")
 
     def _on_check(self, event):
         self._app.check_for_updates()
