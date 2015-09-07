@@ -107,13 +107,20 @@ def chancerecipes(items):
 def _nameorder(item):
     return item["name"]
 
-def get_probable_fpaths():
+def get_probable_fpaths(ignored):
     def mtime(x):
         return os.path.getmtime(os.path.join(datadir, x))
 
-    probably = sorted(os.listdir(datadir), key = mtime)
+    listdir = [fname for fname in os.listdir(datadir)
+               if fname not in ignored]
+    probably = sorted(listdir, key = mtime)
 
     return (os.path.join(datadir, fpath) for fpath in probably)
+
+class Result(object):
+    def __init__(self, succeeded, **kwargs):
+        self.success = succeeded
+        self.__dict__.update(kwargs)
 
 def get_items(fpaths_db, stash_tabs):
     for path in fpaths_db:
@@ -131,12 +138,15 @@ def get_items(fpaths_db, stash_tabs):
         except:
             pass
     else: #nobreak
-        return False
+        return Result(False)
 
     for item in j:
         item["name"] = item["name"].rsplit(">")[-1]
 
-    return (j, os.path.getmtime(path))
+    return Result(True,
+                  items = j, 
+                  mtime = os.path.getmtime(path),
+                  fname = os.path.split(path)[-1])
 
 class Inventory(object):
     def __init__(self):
@@ -157,6 +167,15 @@ class Inventory(object):
             for x in range(12):
                 if self._is_open(item, (x, 3)):
                     self._place(item, (x, 3))
+                    return True
+        elif item["h"] == 1: #Place from one above bottomleft, then bottomleft
+                             # then rightwards from there in columns
+            for x in range(12):
+                if self._is_open(item, (x, 3)):
+                    self._place(item, (x, 3))
+                    return True
+                elif self._is_open(item, (x, 4)):
+                    self._place(item, (x, 4))
                     return True
         
         return False
@@ -189,13 +208,17 @@ class AcquisitionThread(threading.Thread):
 
     def run(self):
         while self._app.alive:
-            items = get_items(get_probable_fpaths(),
-                              self._app.settings["stash_tabs"])
-            if not (items and items[1] > self._app.last_update):
+            res = get_items(get_probable_fpaths(self._app.ignored_files),
+                            self._app.settings["stash_tabs"])
+            if not (res.success and res.mtime > self._app.last_update):
                 time.sleep(config.sleepytime)
                 continue
 
-            inventories = chancerecipes(items[0])
+            items = res.items
+            mtime = res.mtime
+            fname = res.fname
+
+            inventories = chancerecipes(items)
             
             #Notify the user?
             new = inventories
@@ -243,7 +266,8 @@ class AcquisitionThread(threading.Thread):
             self._app.lock.release()
             self._app.inventories_updated(new_recipes)
 
-            self._app.last_update = items[1]
+            self._app.current_file = fname
+            self._app.last_update = mtime
             time.sleep(config.sleepytime)
 
 class App(wx.App):
@@ -267,13 +291,15 @@ class App(wx.App):
         self.inventories = None
         self.alive = True
         self.last_update = 0
+        self.ignored_files = []
+        self.file_ignored_just_RIGHT_NOW_OMG = False
 
-        self._thread = AcquisitionThread(self)
+        self._acqthread = AcquisitionThread(self)
         self._updater = autoupdater.Updater(self, self._update_available,
                                             "Asday", "WhatAreTheChances")
         self.update_available = False
 
-        self._thread.start()
+        self._acqthread.start()
         self._updater.start()
 
         if not self.settings["stash_tabs"]:
@@ -282,7 +308,7 @@ class App(wx.App):
         self.MainLoop()
 
         self.alive = False
-        self._thread.join()
+        self._acqthread.join()
         self._updater.join()
 
         try:
@@ -382,6 +408,11 @@ class App(wx.App):
 
     def update(self):
         wx.MessageBox("Pretending to update!")
+
+    def ignore_current_file(self):
+        self.ignored_files.append(self.current_file)
+        self.last_update = 0
+        self.file_ignored_just_RIGHT_NOW_OMG = True
 
     def quit(self):
         self._trayicon.RemoveIcon()

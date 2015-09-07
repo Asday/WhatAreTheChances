@@ -15,7 +15,7 @@ class Updater(threading.Thread):
         self._branch = branch
         self.version = json.loads(version.version)
         self.patch_notes = ""
-        self._next_check = 3
+        self._next_check = 15
         self.remote_version = [0]
 
     def run(self):

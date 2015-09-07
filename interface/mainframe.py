@@ -13,6 +13,10 @@ itemcolour = pygame.color.Color(255, 0, 0)
 for offset in xrange(10, 120, 10):
     pygame.gfxdraw.line(grid, offset, 0, offset, 120, gridcolour)
     pygame.gfxdraw.line(grid, 0, offset, 120, offset, gridcolour)
+    if offset % 20 == 0:
+        pygame.gfxdraw.line(grid, offset - 1, 0, offset - 1, 120, gridcolour)
+    if offset % 60 == 0:
+        pygame.gfxdraw.line(grid, 0, offset - 1, 120, offset - 1, gridcolour)
 
 def make_preview(item):
     x, y, w, h = item["x"], item["y"], item["w"], item["h"]
@@ -39,13 +43,21 @@ class Main(wx.Frame):
         
         sizer_main = wx.BoxSizer(wx.HORIZONTAL)
         
+        sizer_info = wx.BoxSizer(wx.VERTICAL)
+        
         self.tree_inventories = wx.TreeCtrl(self.panel_bg, wx.ID_ANY, wx.DefaultPosition, wx.Size(-1,600), wx.TR_DEFAULT_STYLE | wx.TR_HIDE_ROOT)
         self.tree_inventories.SetQuickBestSize(False)
 
         self.tree_inventories.rootid = self.tree_inventories.AddRoot("root")
         self.tree_inventories.SetMinSize((250, -1))
-
-        sizer_main.Add(self.tree_inventories, 0, wx.ALL | wx.EXPAND, 5)
+        
+        sizer_info.Add(self.tree_inventories, 1, wx.ALL | wx.EXPAND, 5)
+        
+        self.button_ignore_file = wx.Button(self.panel_bg, wx.ID_ANY, u"These aren't my items!", wx.DefaultPosition, wx.DefaultSize, 0)
+        sizer_info.Add(self.button_ignore_file, 0, wx.ALL | wx.EXPAND, 5)
+        
+        
+        sizer_main.Add(sizer_info, 1, wx.EXPAND, 5)
         
         
         sizer_main.AddSpacer((0, 0), 1, wx.EXPAND, 5)
@@ -98,6 +110,7 @@ class Main(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self._on_close)
         self.tree_inventories.Bind(wx.EVT_TREE_SEL_CHANGED, 
                                self._on_inventory_selected)
+        self.button_ignore_file.Bind(wx.EVT_BUTTON, self._on_ignore_file)
 
     def _on_close(self, event):
         x, y = self.GetPosition()
@@ -121,7 +134,8 @@ class Main(wx.Frame):
         y = 0
         for item in self.inventories[index]:
             preview = self.previews[x][y]
-            preview["sizer"].StaticBox.SetLabel(item["_tab_label"])
+            preview["sizer"].StaticBox.SetLabel(
+                item["_tab_label"] + " - " + item["name"])
             surf_preview = make_preview(item)
             img.show_pygame_surf_in_wxBitmap(surf_preview,
                                                 preview["bitmap"])
@@ -131,24 +145,38 @@ class Main(wx.Frame):
                 x = 0
                 y += 1
 
+    def _on_ignore_file(self, event):
+        self._app.ignore_current_file()
+
     def update_inventories(self):
-        if not self._app.inventories:
-            return False
-        self._app.lock.acquire()
-        self.inventories = self._app.inventories[:]
-        self._app.lock.release()
+        self.tree_inventories.DeleteChildren(
+            self.tree_inventories.GetRootItem())
+        self.clear_previews()
 
-        self.tree_inventories.DeleteChildren(self.tree_inventories.GetRootItem())
+        if self._app.inventories:
+            self._app.lock.acquire()
+            self.inventories = self._app.inventories[:]
+            self._app.lock.release()
 
-        self.tree_inventories.inventoryids = []
-        for i, inventory in enumerate(self.inventories, start = 1):
-            _i = self.tree_inventories.AppendItem(self.tree_inventories.rootid,
-                                                  "Inventory %s" % i)
+            self.tree_inventories.inventoryids = []
+            for i, inventory in enumerate(self.inventories, start = 1):
+                _i = self.tree_inventories.AppendItem(self.tree_inventories.rootid,
+                                                      "Inventory %s" % i)
             
-            for item in inventory:
-                self.tree_inventories.AppendItem(_i, item["name"] + " [" + item["_tab_label"] + "]")
+                for item in inventory:
+                    self.tree_inventories.AppendItem(_i, item["name"] + " [" + item["_tab_label"] + "]")
 
-        self.tree_inventories.ExpandAll()
+            self.tree_inventories.ExpandAll()
+
+            top = self.tree_inventories.GetFirstChild(
+                self.tree_inventories.rootid)[0] #KEK
+            #WHY DOES THAT RETURN TWO THINGS?  QUANTUM KEK
+
+            self.tree_inventories.EnsureVisible(top)
+
+        if self._app.file_ignored_just_RIGHT_NOW_OMG:
+            self._app.file_ignored_just_RIGHT_NOW_OMG = False
+            wx.MessageBox("Ok, how about now?")
 
     def clear_previews(self):
         self.Freeze()
