@@ -118,6 +118,9 @@ class Extractor(threading.Thread):
                 pass
             shutil.move(os.path.join("__patch", folder, fname), fname)
 
+        os.remove("__patch.zip")
+        os.remove("__patch")
+
         wx.PostEvent(self.frame, self.evt_complete())
 
 class Main(wx.Frame):
@@ -282,7 +285,7 @@ class Main(wx.Frame):
     def finished(self, event):
         self.listbook_stage.SetSelection(3)
 
-        os.startfile()
+        os.startfile(self.restart_file)
 
         wx.Exit()
 
