@@ -10,9 +10,9 @@ class Updater(threading.Thread):
         super(Updater, self).__init__()
         self.callback = callback
         self._app = app
-        self._user = githubuser
-        self._repo = repo
-        self._branch = branch
+        self.user = githubuser
+        self.repo = repo
+        self.branch = branch
         self.version = json.loads(version.version)
         self.patch_notes = ""
         self._next_check = 15
@@ -33,7 +33,7 @@ class Updater(threading.Thread):
 
     def _get_github_stub(self):
         skele = "https://raw.githubusercontent.com/%s/%s/%s/"
-        url = skele % (self._user, self._repo, self._branch)
+        url = skele % (self.user, self.repo, self.branch)
         return url
 
     def _get_github_file(self, fname, readlines = False):
@@ -78,3 +78,25 @@ class Updater(threading.Thread):
 
     def check_now(self):
         self._next_check = 0
+
+def update(updater_instance, pid, restart_file):
+    with file("__patch notes.tmp", "w") as f:
+        f.write(updater_instance.patch_notes)
+
+    zip_skele = "https://github.com/%s/%s/archive/%s.zip"
+    zip = zip_skele % (
+        updater_instance.user,
+        updater_instance.repo,
+        updater_instance.branch)
+
+    args = (pid, "__patch notes.tmp", zip, restart_file)
+    out = []
+    for arg in args:
+        str_arg = str(arg)
+        escaped = str_arg.replace("\"","\\\"")
+        enclosed = "\"" + escaped + "\""
+        out.append(enclosed)
+    
+    args = " ".join(out)
+
+    os.system("start upgrade.py" + " " + args)

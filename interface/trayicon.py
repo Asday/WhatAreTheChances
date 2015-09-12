@@ -27,6 +27,7 @@ class Main(wx.TaskBarIcon):
     def CreatePopupMenu(self):
         menu = wx.Menu()
         self.create_menu_item(menu, "Show recipes", self.on_show)
+        self.create_menu_item(menu, "Settings", self.on_settings)
         if self._app.update_available:
             self.create_menu_item(menu, "Update", self.on_update)
         else:
@@ -45,6 +46,9 @@ class Main(wx.TaskBarIcon):
     def on_show(self, event = None):
         #lol why is this a separate function?
         self._app.launch_mainframe()
+
+    def on_settings(self, event):
+        self._app.launch_settings_window()
 
     def on_update(self, event):
         self._app.launch_update_window()

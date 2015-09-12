@@ -46,6 +46,7 @@
     <Compile Include="main.pyw">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="upgrade.py" />
     <Compile Include="version.py">
       <SubType>Code</SubType>
     </Compile>
@@ -54,7 +55,7 @@
     <Folder Include="interface\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="interface\todo.txt" />
+    <Content Include="todo.txt" />
     <Content Include="README.md" />
   </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />

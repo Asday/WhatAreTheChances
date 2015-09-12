@@ -1,4 +1,5 @@
 import os
+import sys
 import threading
 import json
 import sqlite3
@@ -55,6 +56,11 @@ def fill_inventories(recipes):
         for item in recipe:
             inventory.append(item)
 
+    if inventory:
+        #Bug found by @WrKnght; if you didn't have a full inventory of stuff
+        # WhatAreTheChances pretended you didn't have SHIT D:
+        out.append(inventory)
+
     return out
 
 def _tabname(item):
@@ -80,9 +86,8 @@ def chancerecipes(items):
 
     counts = [names.count(name) for name in names]
 
-    for i, (count, tidyname) in enumerate(zip(counts, names)):
+    for i, count in enumerate(counts):
         items[i]["count"] = count
-        items[i]["name"] = tidyname
 
     chances = [item
                for item
@@ -260,6 +265,10 @@ class AcquisitionThread(threading.Thread):
                             recipe.append(item)
                     new_recipes.append(recipe)
 
+            #sort the recipes properly
+            for inventory in inventories:
+                inventory.sort(key = lambda item: item["_tab_label"].zfill(3))
+
             #update app's recipe list
             self._app.lock.acquire()
             self._app.inventories = inventories
@@ -301,7 +310,7 @@ class App(wx.App):
 
         self._acqthread.start()
         self._updater.start()
-
+        
         if not self.settings["stash_tabs"]:
             wx.CallAfter(self.launch_settings_window)
 
@@ -407,7 +416,8 @@ class App(wx.App):
         self.update_available = False
 
     def update(self):
-        wx.MessageBox("Pretending to update!")
+        autoupdater.update(self._updater, os.getpid(), sys.argv[0])
+        self.quit()
 
     def ignore_current_file(self):
         self.ignored_files.append(self.current_file)

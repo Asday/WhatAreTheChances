@@ -57,7 +57,14 @@ class Main(wx.Frame):
         
         sizer_centred.Add(group_unnumbered, 0, wx.EXPAND, 5)
         
-        sizer_actions = wx.BoxSizer(wx.VERTICAL)
+        sizer_actions = wx.BoxSizer(wx.HORIZONTAL)
+        
+        self.static_hint = wx.StaticText(self.panel_bg, wx.ID_ANY, u"Settings are saved automatically :3", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.static_hint.Wrap(-1)
+        sizer_actions.Add(self.static_hint, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+        
+        
+        sizer_actions.AddSpacer((0, 0), 1, wx.EXPAND, 5)
         
         self.button_check_for_updates = wx.Button(self.panel_bg, wx.ID_ANY, u"Check for updates", wx.DefaultPosition, wx.DefaultSize, 0)
         sizer_actions.Add(self.button_check_for_updates, 0, wx.ALL | wx.ALIGN_RIGHT, 5)

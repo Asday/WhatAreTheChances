@@ -1,0 +1,6 @@
+Launch actual updater program with own PID as an argument
+ quit
+
+Actual updater downloads the zip from github, then waits for the PID to be gone
+ extract zip and overwrite files
+ relaunch program
