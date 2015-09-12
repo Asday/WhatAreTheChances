@@ -94,7 +94,7 @@ class Waiter(threading.Thread):
         wx.PostEvent(self.frame, self.evt_complete())
 
 class Extractor(threading.Thread):
-    def __init(self, frame, evt_complete):
+    def __init__(self, frame, evt_complete):
         super(Extractor, self).__init__()
         self.frame = frame
         self.evt_complete = evt_complete
