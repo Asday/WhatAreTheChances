@@ -119,7 +119,7 @@ class Extractor(threading.Thread):
             shutil.move(os.path.join("__patch", folder, fname), fname)
 
         os.remove("__patch.zip")
-        os.remove("__patch")
+        shutil.rmtree("__patch")
 
         wx.PostEvent(self.frame, self.evt_complete())
 
