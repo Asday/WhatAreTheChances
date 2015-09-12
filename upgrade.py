@@ -1,5 +1,8 @@
 import os
 import sys
+import threading
+import time
+import shutil
 import urllib2
 import zipfile
 
@@ -58,6 +61,59 @@ def humanise_filesize(bytes):
         return "%0.2f TiB" % (bytes / 1024.0**4)
     else: #negative
         return "pretty fuckin' small yo"
+
+class Downloader(threading.Thread):
+    def __init__(self, frame, url, evt_poke, evt_complete):
+        super(Downloader, self).__init__()
+        self.frame = frame
+        self.url = url
+        self.evt_poke = evt_poke
+        self.evt_complete = evt_complete
+
+    def run(self):
+        with file("__patch.zip", "w") as f:
+            download_with_progress(self.url, f, self._poke)
+        wx.PostEvent(self.frame, self.evt_complete)
+
+    def _poke(self, bytes):
+        self.evt_poke.data = bytes
+        wx.PostEvent(self.frame, self.evt_poke)
+
+class Waiter(threading.Thread):
+    def __init__(self, frame, pid, evt_complete):
+        super(Waiter, self).__init__()
+        self.frame = frame
+        self.pid = pid
+        self.evt_complete = evt_complete
+
+    def run(self):
+        while pid_is_running(self.pid):
+            time.sleep(1)
+
+        wx.PostEvent(self.frame, self.evt_complete)
+
+class Extractor(threading.Thread):
+    def __init(self, frame, evt_complete):
+        super(Extractor, self).__init__()
+        self.frame = frame
+        self.evt_complete = evt_complete
+
+    def run(self):
+        zip = zipfile.ZipFile("__patch.zip")
+        try:
+            os.mkdir("__patch")
+        except WindowsError as e:
+            if e.errno == 17: #already exists
+                pass
+
+        zip.extractall("__patch")
+        zip.close()
+
+        folder = os.listdir("__patch")[0]
+        for fname in os.listdir(os.path.join("__patch", folder)):
+            shutil.move(os.path.join("__patch", folder, fname), fname)
+
+        wx.PostEvent(self.frame, self.evt_complete)
 
 class Main(wx.Frame):
     def __init__(self, parent):
@@ -169,23 +225,64 @@ class Main(wx.Frame):
 
         self.Show()
 
-        pid, patch_notes_file, remote_resource, restart_file = sys.argv[1:]
+        (self.pid, patch_notes_file,
+         remote_resource, self.restart_file) = sys.argv[1:]
 
         with file(patch_notes_file, "r") as f:
             patch_notes = f.read()
 
         os.remove(patch_notes_file)
 
-        with file("__patch.zip", "w") as f:
-            download_with_progress(remote_resource, f, 
-                                   self.update_download_progress)
+        downloader_poke_id = wx.NewId()
+        downloader_complete_id = wx.NewId()
+        downloader_poke = wx.PyEventBinder(downloader_poke_id)
+        downloader_complete = wx.PyEventBinder(downloader_complete_id)
 
-    def update_download_progress(self, progress):
-        wx.CallAfter(self._update_download_progress, progress)
+        self.Bind(downloader_poke, self.update_download_progress)
+        self.Bind(downloader_complete, self.wait_on_pid)
+        
+        downloader = Downloader(self, remote_resource,
+                                downloader_poke,
+                                downloader_complete)
+
+        downloader.start()
+
+
+    def update_download_progress(self, event):
+        wx.CallAfter(self._update_download_progress, event.data)
 
     def _update_download_progress(self, progress):
         self.label_downloaded.SetLabel(
             self.label_downloaded.skele % humanise_filesize(progress))
+
+    def wait_on_pid(self, event):
+        self.listbook_stage.SetSelection(1)
+
+        waiting_done_id = wx.NewId()
+        waiting_done = PyEventBinder(waiting_done_id)
+        self.Bind(waiting_done, self.extract)
+
+        waiter = Waiter(self, self.pid, waiting_done)
+
+        waiter.start()
+
+    def extract(self, event):
+        self.listbook_stage.SetSelection(2)
+
+        extracting_done_id = wx.NewId()
+        extracting_done = PyEventBinder(extracting_done_id)
+        self.Bind(extracting_done, self.finished)
+
+        extractor = Extractor(self, extracting_done)
+
+        extractor.start()
+
+    def finished(self, event):
+        self.listbook_stage.SetSelection(3)
+
+        os.startfile()
+
+        wx.Exit()
 
 class App(wx.App):
     def __init__(self):
