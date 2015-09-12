@@ -7,10 +7,14 @@ class Main(wx.TaskBarIcon):
     def __init__(self, app):
         super(Main, self).__init__()
         self.set_icon(_TRAY_ICON)
-        self.Bind(wx.EVT_TASKBAR_LEFT_DOWN, self.on_left_down)
+        self.Bind(wx.EVT_TASKBAR_LEFT_DOWN, self.on_show)
         self.Bind(wx.EVT_TASKBAR_BALLOON_CLICK, self.on_balloon_click)
         self._app = app
 
+        self.balloonhandlers = {
+            "update": self._app.launch_update_window,
+            "recipes": self._app.launch_mainframe,
+            }
         self.new_recipe_skeleton = "Heyya, you've got new recipes:\n\n%s"
 
     @staticmethod
@@ -23,6 +27,11 @@ class Main(wx.TaskBarIcon):
     def CreatePopupMenu(self):
         menu = wx.Menu()
         self.create_menu_item(menu, "Show recipes", self.on_show)
+        self.create_menu_item(menu, "Settings", self.on_settings)
+        if self._app.update_available:
+            self.create_menu_item(menu, "Update", self.on_update)
+        else:
+            self.create_menu_item(menu, "Check for updates", self.on_check)
         menu.AppendSeparator()
         self.create_menu_item(menu, "Exit", self.on_exit)
         return menu
@@ -31,20 +40,27 @@ class Main(wx.TaskBarIcon):
         icon = wx.IconFromBitmap(wx.Bitmap(path))
         self.SetIcon(icon, _TRAY_TOOLTIP)
 
-    def on_left_down(self, event):
-        self.on_show()
-
     def on_balloon_click(self, event):
-        self._app.launch_mainframe()
+        self.balloonhandler()
 
     def on_show(self, event = None):
         #lol why is this a separate function?
         self._app.launch_mainframe()
+
+    def on_settings(self, event):
+        self._app.launch_settings_window()
+
+    def on_update(self, event):
+        self._app.launch_update_window()
+
+    def on_check(self, event):
+        self._app.check_for_updates()
         
     def on_exit(self, event):
         self._app.quit()
     
     def new_recipes(self, recipelist):
+        self.balloonhandler = self.balloonhandlers["recipes"]
         recipes = [
             recipe[0]["name"] + ", [" + ", ".join(
                 [item["_tab_label"] 
@@ -60,3 +76,15 @@ class Main(wx.TaskBarIcon):
 
         self.ShowBalloon("New recipes!",
                          self.new_recipe_skeleton % reprcipe)
+
+    def update_available(self):
+        self.balloonhandler = self.balloonhandlers["update"]
+        self.ShowBalloon("New version!",
+                         ("A new version, %s, is available.  Click here to see"
+                          " the patch notes.") % self._make_remote_version())
+
+    def _make_remote_version(self):
+        try:
+            return ".".join(self._app.remote_version)
+        except:
+            return str(self._app.remote_version)

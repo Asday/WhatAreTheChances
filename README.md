@@ -20,9 +20,11 @@ Check out the demo [here](http://youtu.be/5gffb8iLKc0).
 
 Pick some tabs in which to dump loot ingame.  The more the better.  I have 119 stash tabs, and 66 of them are dedicated to this.
 
-Open `config.py` in your favourite plaintext editor (no Microsoft Word allowed), and edit the values for `lowest_stash_tab_number`, `highest_stash_tab_number`, and `extra_stash_tabs` to match the aforementioned tabs.  In my case, `lowest_stash_tab_number` is `1`, `highest_stash_tab_number` is `65`, and the contents of `extra_stash_tabs` is just one tab, called `u"r"`.  For extra stash tabs, just add a line between the square brackets, and type `u"your stash tab name",`, making sure to include the trailing comma.  For unicode characters, you'll have to find the code and put that in instead like `u"\u0277"`.
+Run `main.pyw`, and you'll be presented with a settings window, if it's your first run of the program.  This just lets you tell the program which stash tabs you're using for purpose.  For those of you with a lot of nonpremium stash tabs, (or defaultly named premium ones), you can define a numerical range of stash tabs to check, and for those who don't fit into that group, or if you have extra tabs to tack onto that, you can put them in the text box there, separated by commas.
 
-Once that's done, save it, and run `main.pyw`.
+If the settings window doesn't show, or you want it back, simply right click on the tray icon, and hit "Settings".
+
+Aaand that's it!  WhatAreTheChances will now keep an eye on your Acquisition data, and let you know when it finds something.  It also definitely doesn't send any data to me about all your cool drops.  Honest.  Seriously.  Why don't you trust me bro.
 
 # Requirements
 

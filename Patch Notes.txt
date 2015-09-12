@@ -1,0 +1,32 @@
+v1.1
+
+################################## Features ###################################
+Now has an automatic updater which works.  I hope.  Please jesus christ work.
+
+You can now ignore datafiles from Acquisition.  It seems like there are several
+ files in the data folder for Acquisition, which I _think_ correspond to
+ different leagues, but I can't be sure.  Now, in the main window, there's a
+ facility to ignore the current data file.  Click that button if
+ WhatAreTheChances is pointing you to items that don't exist.
+
+################################ Improvements #################################
+Gridlines!  Should certainly make items more easy to find.
+
+Item names are now displayed above their previews as well as in the inventory
+ list.  Less eye movement is needed now, for maximum laziness/efficiency.
+
+################################## Bugfixes ###################################
+Previously, if you didn't have enough recipes to fill up a whole inventory,
+ WhatAreTheChances would straight up not show you anything.  This is now fixed,
+ thanks to help from WrKnght's bug reporting and patience.
+
+Items were out of order if you'd previously ignored chance recipes.  I fixed
+ that, too.
+
+-------------------------------------------------------------------------------
+v1.0
+Launched, to much fanfare
+
+################################## Features ###################################
+Searches your stash tabs for chance and alchemy orb recipes, and displays them
+ in a sensible manner.
