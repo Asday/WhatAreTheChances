@@ -143,7 +143,8 @@ class Main(wx.Frame):
         
         sizer_downloading.AddSpacer((0, 0), 1, wx.EXPAND, 5)
         
-        self.label_downloading = wx.StaticText(self.panel_downloading, wx.ID_ANY, u"Fetching %s...", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.label_downloading = wx.StaticText(self.panel_downloading, wx.ID_ANY, u"", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.label_downloading.skele = "Fetching %s..."
         self.label_downloading.Wrap(-1)
         sizer_downloading.Add(self.label_downloading, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 5)
         
@@ -184,14 +185,9 @@ class Main(wx.Frame):
         
         sizer_extracting.AddSpacer((0, 0), 1, wx.EXPAND, 5)
         
-        self.label_extracting = wx.StaticText(self.panel_extracting, wx.ID_ANY, u"Currently extracting %s, (%s/%s)...", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.label_extracting = wx.StaticText(self.panel_extracting, wx.ID_ANY, u"Currently extracting patch...", wx.DefaultPosition, wx.DefaultSize, 0)
         self.label_extracting.Wrap(-1)
         sizer_extracting.Add(self.label_extracting, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 5)
-        
-        self.progress_extracting = wx.Gauge(self.panel_extracting, wx.ID_ANY, 100, wx.DefaultPosition, wx.DefaultSize, wx.GA_HORIZONTAL)
-        self.progress_extracting.SetValue(0) 
-        sizer_extracting.Add(self.progress_extracting, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 5)
-        
         
         sizer_extracting.AddSpacer((0, 0), 2, wx.EXPAND, 5)
         
@@ -235,6 +231,9 @@ class Main(wx.Frame):
 
         (self.pid, patch_notes_file,
          remote_resource, self.restart_file) = sys.argv[1:]
+
+        self.label_downloading.SetLabel(
+            self.label_downloading.skele % remote_resource)
 
         with file(patch_notes_file, "r") as f:
             patch_notes = f.read()

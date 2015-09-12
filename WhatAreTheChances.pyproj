@@ -55,6 +55,7 @@
     <Folder Include="interface\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Patch Notes.txt" />
     <Content Include="todo.txt" />
     <Content Include="README.md" />
   </ItemGroup>
