@@ -7,6 +7,7 @@ import urllib2
 import zipfile
 
 import wx
+import wx.lib.newevent
 
 def download_with_progress(url, filelike, report_hook = None):
     bytes_so_far = 0
@@ -73,11 +74,11 @@ class Downloader(threading.Thread):
     def run(self):
         with file("__patch.zip", "w") as f:
             download_with_progress(self.url, f, self._poke)
-        wx.PostEvent(self.frame, self.evt_complete)
+        wx.PostEvent(self.frame, self.evt_complete())
 
     def _poke(self, bytes):
         self.evt_poke.data = bytes
-        wx.PostEvent(self.frame, self.evt_poke)
+        wx.PostEvent(self.frame, self.evt_poke(data = bytes))
 
 class Waiter(threading.Thread):
     def __init__(self, frame, pid, evt_complete):
@@ -90,7 +91,7 @@ class Waiter(threading.Thread):
         while pid_is_running(self.pid):
             time.sleep(1)
 
-        wx.PostEvent(self.frame, self.evt_complete)
+        wx.PostEvent(self.frame, self.evt_complete())
 
 class Extractor(threading.Thread):
     def __init(self, frame, evt_complete):
@@ -113,11 +114,11 @@ class Extractor(threading.Thread):
         for fname in os.listdir(os.path.join("__patch", folder)):
             shutil.move(os.path.join("__patch", folder, fname), fname)
 
-        wx.PostEvent(self.frame, self.evt_complete)
+        wx.PostEvent(self.frame, self.evt_complete())
 
 class Main(wx.Frame):
-    def __init__(self, parent):
-        wx.Frame.__init__(self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size(500,300), style = wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
+    def __init__(self):
+        wx.Frame.__init__(self, parent = None, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size(500,300), style = wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
         
         self.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
         
@@ -233,13 +234,11 @@ class Main(wx.Frame):
 
         os.remove(patch_notes_file)
 
-        downloader_poke_id = wx.NewId()
-        downloader_complete_id = wx.NewId()
-        downloader_poke = wx.PyEventBinder(downloader_poke_id)
-        downloader_complete = wx.PyEventBinder(downloader_complete_id)
+        downloader_poke, evt_downloader_poke = wx.lib.newevent.NewEvent()
+        downloader_complete, evt_downloader_complete = wx.lib.newevent.NewEvent()
 
-        self.Bind(downloader_poke, self.update_download_progress)
-        self.Bind(downloader_complete, self.wait_on_pid)
+        self.Bind(evt_downloader_poke, self.update_download_progress)
+        self.Bind(evt_downloader_complete, self.wait_on_pid)
         
         downloader = Downloader(self, remote_resource,
                                 downloader_poke,
@@ -257,10 +256,9 @@ class Main(wx.Frame):
 
     def wait_on_pid(self, event):
         self.listbook_stage.SetSelection(1)
-
-        waiting_done_id = wx.NewId()
-        waiting_done = PyEventBinder(waiting_done_id)
-        self.Bind(waiting_done, self.extract)
+        
+        waiting_done, evt_waiting_done = wx.lib.newevent.NewEvent()
+        self.Bind(evt_waiting_done, self.extract)
 
         waiter = Waiter(self, self.pid, waiting_done)
 
@@ -270,8 +268,8 @@ class Main(wx.Frame):
         self.listbook_stage.SetSelection(2)
 
         extracting_done_id = wx.NewId()
-        extracting_done = PyEventBinder(extracting_done_id)
-        self.Bind(extracting_done, self.finished)
+        extracting_done, evt_extracting_done = wx.lib.newevent.NewEvent()
+        self.Bind(evt_extracting_done, self.finished)
 
         extractor = Extractor(self, extracting_done)
 
@@ -292,4 +290,4 @@ class App(wx.App):
 
         self.MainLoop()
 
-#App()
+App()
