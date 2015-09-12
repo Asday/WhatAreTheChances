@@ -72,7 +72,7 @@ class Downloader(threading.Thread):
         self.evt_complete = evt_complete
 
     def run(self):
-        with file("__patch.zip", "w") as f:
+        with file("__patch.zip", "wb") as f:
             download_with_progress(self.url, f, self._poke)
         wx.PostEvent(self.frame, self.evt_complete())
 
@@ -112,6 +112,10 @@ class Extractor(threading.Thread):
 
         folder = os.listdir("__patch")[0]
         for fname in os.listdir(os.path.join("__patch", folder)):
+            try:
+                os.remove(fname)
+            except:
+                pass
             shutil.move(os.path.join("__patch", folder, fname), fname)
 
         wx.PostEvent(self.frame, self.evt_complete())
