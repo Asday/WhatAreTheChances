@@ -46,6 +46,9 @@
     <Compile Include="main.pyw">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="promble.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="upgrade.py" />
     <Compile Include="version.py">
       <SubType>Code</SubType>

@@ -1,3 +1,16 @@
+v1.2
+
+################################## Bugfixes ###################################
+If you had enough recipes to fill more than two inventories, chances are (kek)
+ that WhatAreTheChances would muck up and overfill your second (and subsequent)
+ inventoryloads.  I have located the exact point of my idiocy and rectified it.
+
+################################ Improvements #################################
+Commented a couple more things.  Not user-facing.
+
+Gave the Result class a little polish.  Not user-facing.
+
+-------------------------------------------------------------------------------
 v1.1
 
 ################################## Features ###################################

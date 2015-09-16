@@ -44,16 +44,26 @@ def fill_inventories(recipes):
     for recipe in recipes:
         fits = True
         for item in recipe:
+            #check to see that the whole recipe fits
             if not i.place(item):
                 fits = False
+                #if it doesn't, get outta here
                 break
+
         if not fits:
+            #If it doesn't, it's 'cause the inventory got too full
+            # chunk that inventory to the output, make a new one, and carry on
             inventory.sort(key = _tabname)
             out.append(inventory)
             inventory = []
             i.clear()
         
         for item in recipe:
+            #add every item to the inventory
+            if not fits:
+                #Make sure the inventory actually accounts for them if we just
+                # cleared it.  BUGFIX
+                i.place(item)
             inventory.append(item)
 
     if inventory:
@@ -127,7 +137,29 @@ class Result(object):
         self.success = succeeded
         self.__dict__.update(kwargs)
 
+    def __repr__(self):
+        if self.success:
+            members = [member
+                       for member
+                       in dir(self)
+                       if (member != "success")
+                       and (member[0] != "_")]
+            if not members:
+                members = ["None"]
+            return "Success!  Members available:  %s" % ", ".join(members)
+        else:
+            if any(map(self.__dict__.has_key, ("reason", "message"))):
+                try:
+                    tail = self.reason
+                except AttributeError:
+                    tail = self.message
+            else:
+                tail = ""
+
+            return "Failure%s" % tail
+
 def get_items(fpaths_db, stash_tabs):
+    stash_tabs = [str(stash_tab) for stash_tab in stash_tabs]
     for path in fpaths_db:
         try:
             d = sqlite3.connect(path)
@@ -443,4 +475,4 @@ class App(wx.App):
 
         wx.Exit()
 
-App()
+#App()
