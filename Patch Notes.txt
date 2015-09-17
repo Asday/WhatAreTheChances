@@ -1,14 +1,19 @@
 v1.2
 
+################################ Improvements #################################
+Commented a couple more things.  Not user-facing.
+
+Gave the Result class a little polish.  Not user-facing.
+
 ################################## Bugfixes ###################################
 If you had enough recipes to fill more than two inventories, chances are (kek)
  that WhatAreTheChances would muck up and overfill your second (and subsequent)
  inventoryloads.  I have located the exact point of my idiocy and rectified it.
 
-################################ Improvements #################################
-Commented a couple more things.  Not user-facing.
+Fixed a problem with the auto updater not correctly fetching Patch Notes, so
+ you probably aren't reading this.  D:
 
-Gave the Result class a little polish.  Not user-facing.
+Fixed a problem with the display of version numbers.
 
 -------------------------------------------------------------------------------
 v1.1

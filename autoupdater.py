@@ -64,7 +64,7 @@ class Updater(threading.Thread):
         return version
 
     def update_patch_notes(self):
-        self.patch_notes = self._get_github_file("Patch Notes.txt")
+        self.patch_notes = self._get_github_file("Patch%20Notes.txt")
 
     def update_available(self):
         self.remote_version = self.get_remote_version()

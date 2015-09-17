@@ -7,7 +7,7 @@ import pygame.gfxdraw
 import img
 
 grid = pygame.surface.Surface((120, 120))
-grid.fill(0x000000)
+grid.fill(0x123456)
 gridcolour = pygame.color.Color(104, 104, 104)
 itemcolour = pygame.color.Color(255, 0, 0)
 for offset in xrange(10, 120, 10):

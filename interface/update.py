@@ -4,8 +4,15 @@ class Main(wx.Frame):
     def __init__(self, app, local_version, remote_version, patch_notes,
                  position, size):
         self._app = app
-        local_version = str(local_version)
-        remote_version = str(remote_version)
+        try:
+            local_version = ".".join([str(x) for x in local_version])
+        except:
+            local_version = str(local_version)
+
+        try:
+            remote_version = ".".join([str(x) for x in remote_version])
+        except:
+            remote_version = str(remote_version)
 
         wx.Frame.__init__(self, None, id = wx.ID_ANY, title = u"Update available", pos = position, size = size, style = wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
         
@@ -60,6 +67,8 @@ class Main(wx.Frame):
         sizer_patch_notes.Add(self.static_patch_notes, 0, wx.TOP | wx.RIGHT | wx.LEFT, 5)
         
         self.text_patch_notes = wx.TextCtrl(self.panel_bg, wx.ID_ANY, patch_notes, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE | wx.TE_READONLY)
+        self.text_patch_notes.SetFont(wx.Font(wx.NORMAL_FONT.GetPointSize(), 75, 90, 90, False, wx.EmptyString))
+
         sizer_patch_notes.Add(self.text_patch_notes, 1, wx.EXPAND | wx.BOTTOM | wx.RIGHT | wx.LEFT, 5)
         
         

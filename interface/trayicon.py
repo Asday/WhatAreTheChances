@@ -85,6 +85,6 @@ class Main(wx.TaskBarIcon):
 
     def _make_remote_version(self):
         try:
-            return ".".join(self._app.remote_version)
+            return ".".join([str(x) for x in self._app.remote_version])
         except:
             return str(self._app.remote_version)

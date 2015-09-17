@@ -398,7 +398,7 @@ class App(wx.App):
             size = (w, h)
         except KeyError:
             position = wx.DefaultPosition
-            size = (500, 537)
+            size = (610, 537)
 
         self._updateframe = interface.update.Main(self, self.local_version,
                                                   self.remote_version,
@@ -475,4 +475,4 @@ class App(wx.App):
 
         wx.Exit()
 
-#App()
+App()
