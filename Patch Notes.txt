@@ -15,6 +15,9 @@ Fixed a problem with the auto updater not correctly fetching Patch Notes, so
 
 Fixed a problem with the display of version numbers.
 
+Fixed a heap of problems with the auto updater not actually doing anything
+ properly at all, and just deleting everything instead.  Wtf.
+
 -------------------------------------------------------------------------------
 v1.1
 
