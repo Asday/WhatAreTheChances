@@ -159,7 +159,7 @@ class Result(object):
             return "Failure%s" % tail
 
 def get_items(fpaths_db, stash_tabs):
-    stash_tabs = [str(stash_tab) for stash_tab in stash_tabs]
+    stash_tabs = [unicode(stash_tab) for stash_tab in stash_tabs]
     for path in fpaths_db:
         try:
             d = sqlite3.connect(path)
