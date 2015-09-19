@@ -1,9 +1,20 @@
 v1.2
 
+################################## Features ###################################
+League selector!  Replaces the item ignorerer button, which was pretty
+ unwieldly tbh.
+
 ################################ Improvements #################################
 Commented a couple more things.  Not user-facing.
 
 Gave the Result class a little polish.  Not user-facing.
+
+A full preview of a tab is now shown, which should help in locating items a bit
+ faster and more easily.  Lemme know if the colours are ok.
+
+The settings now save to disk every 15 seconds, instead of just when you exit
+ the program.  This'll protect you from program crashes (which shouldn't happen
+ ofc), system crashes, and power outages. 
 
 ################################## Bugfixes ###################################
 If you had enough recipes to fill more than two inventories, chances are (kek)
@@ -17,6 +28,10 @@ Fixed a problem with the display of version numbers.
 
 Fixed a heap of problems with the auto updater not actually doing anything
  properly at all, and just deleting everything instead.  Wtf.
+
+WhatAreTheChances didn't actually notice the spinners in the settings window
+ being changed, so you would need to type something in the text box to get
+ their values to save properly.  That's a bit of an oversight.  Fixed it now.
 
 -------------------------------------------------------------------------------
 v1.1

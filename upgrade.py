@@ -284,7 +284,6 @@ class Main(wx.Frame):
     def extract(self, event):
         self.listbook_stage.SetSelection(2)
 
-        extracting_done_id = wx.NewId()
         extracting_done, evt_extracting_done = wx.lib.newevent.NewEvent()
         self.Bind(evt_extracting_done, self.finished)
 
