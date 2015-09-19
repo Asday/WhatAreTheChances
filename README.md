@@ -20,7 +20,7 @@ Check out the demo [here](http://youtu.be/5gffb8iLKc0).
 
 Pick some tabs in which to dump loot ingame.  The more the better.  I have 119 stash tabs, and 66 of them are dedicated to this.
 
-Run `main.pyw`, and you'll be presented with a settings window, if it's your first run of the program.  This just lets you tell the program which stash tabs you're using for purpose.  For those of you with a lot of nonpremium stash tabs, (or defaultly named premium ones), you can define a numerical range of stash tabs to check, and for those who don't fit into that group, or if you have extra tabs to tack onto that, you can put them in the text box there, separated by commas.
+Run `main.pyw`, and you'll be presented with a settings window, if it's your first run of the program.  This just lets you tell the program which stash tabs you're using for purpose in which league.  Select your league with the choice at the top, then, for those of you with a lot of nonpremium stash tabs, (or defaultly named premium ones), you can define a numerical range of stash tabs to check, and for those who don't fit into that group, or if you have extra tabs to tack onto that, you can put them in the text box there, separated by commas.
 
 If the settings window doesn't show, or you want it back, simply right click on the tray icon, and hit "Settings".
 

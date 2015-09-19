@@ -6,32 +6,24 @@ import pygame.gfxdraw
 
 import img
 
-grid = pygame.surface.Surface((120, 120))
+grid = pygame.surface.Surface((119, 119))
 grid.fill(0x000000)
 gridcolour = pygame.color.Color(104, 104, 104)
-itemcolour = pygame.color.Color(255, 0, 0)
-for offset in xrange(10, 120, 10):
-    pygame.gfxdraw.line(grid, offset, 0, offset, 120, gridcolour)
-    pygame.gfxdraw.line(grid, 0, offset, 120, offset, gridcolour)
+interested = pygame.color.Color(255, 126, 44)
+uninterested = pygame.color.Color(64, 30, 26)
+for offset in xrange(10, 119, 10):
+    pygame.gfxdraw.line(grid, offset - 1, 0, offset - 1, 119, gridcolour)
+    pygame.gfxdraw.line(grid, 0, offset - 1, 119, offset - 1, gridcolour)
     if offset % 20 == 0:
-        pygame.gfxdraw.line(grid, offset - 1, 0, offset - 1, 120, gridcolour)
+        pygame.gfxdraw.line(grid, offset, 0, offset, 119, gridcolour)
     if offset % 60 == 0:
-        pygame.gfxdraw.line(grid, 0, offset - 1, 120, offset - 1, gridcolour)
-
-def make_preview(item):
-    x, y, w, h = item["x"], item["y"], item["w"], item["h"]
-    surf = grid.copy()
-
-    itemblock = pygame.surface.Surface((w * 10, h * 10))
-    itemblock.fill(itemcolour)
-
-    surf.blit(itemblock, (x * 10, y * 10))
-
-    return surf
+        pygame.gfxdraw.line(grid, 0, offset, 119, offset, gridcolour)
 
 class Main(wx.Frame):
-    def __init__(self, _app, position, size):
-        self._app = _app
+    def __init__(self, app, position, size):
+        self._app = app
+        self._tab_previews = {}
+
         wx.Frame.__init__(self, parent = None, id = wx.ID_ANY, title = u"What are the chances?", pos = position, size = size, style = wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
         
         self.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
@@ -52,10 +44,6 @@ class Main(wx.Frame):
         self.tree_inventories.SetMinSize((250, -1))
         
         sizer_info.Add(self.tree_inventories, 1, wx.ALL | wx.EXPAND, 5)
-        
-        self.button_ignore_file = wx.Button(self.panel_bg, wx.ID_ANY, u"These aren't my items!", wx.DefaultPosition, wx.DefaultSize, 0)
-        sizer_info.Add(self.button_ignore_file, 0, wx.ALL | wx.EXPAND, 5)
-        
         
         sizer_main.Add(sizer_info, 1, wx.EXPAND, 5)
         
@@ -110,7 +98,6 @@ class Main(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self._on_close)
         self.tree_inventories.Bind(wx.EVT_TREE_SEL_CHANGED, 
                                self._on_inventory_selected)
-        self.button_ignore_file.Bind(wx.EVT_BUTTON, self._on_ignore_file)
 
     def _on_close(self, event):
         x, y = self.GetPosition()
@@ -136,7 +123,7 @@ class Main(wx.Frame):
             preview = self.previews[x][y]
             preview["sizer"].StaticBox.SetLabel(
                 item["_tab_label"] + " - " + item["name"])
-            surf_preview = make_preview(item)
+            surf_preview = self.make_preview(item)
             img.show_pygame_surf_in_wxBitmap(surf_preview,
                                                 preview["bitmap"])
 
@@ -144,9 +131,6 @@ class Main(wx.Frame):
             if x == 6:
                 x = 0
                 y += 1
-
-    def _on_ignore_file(self, event):
-        self._app.ignore_current_file()
 
     def update_inventories(self):
         self.tree_inventories.DeleteChildren(
@@ -156,6 +140,7 @@ class Main(wx.Frame):
         if self._app.inventories:
             self._app.lock.acquire()
             self.inventories = self._app.inventories[:]
+            self.items = self._app.items[:]
             self._app.lock.release()
 
             self.tree_inventories.inventoryids = []
@@ -174,9 +159,41 @@ class Main(wx.Frame):
 
             self.tree_inventories.EnsureVisible(top)
 
-        if self._app.file_ignored_just_RIGHT_NOW_OMG:
-            self._app.file_ignored_just_RIGHT_NOW_OMG = False
-            wx.MessageBox("Ok, how about now?")
+    def make_preview(self, item):
+        x, y, w, h = item["x"], item["y"], item["w"], item["h"]
+        tab = item["_tab_label"]
+
+        filtered = [i for i in self.items if i["_tab_label"] == tab]
+        positions = sorted([(i["x"], i["y"], i["w"], i["h"])
+                            for i in filtered])
+        old = self._tab_previews.get(tab, {"surf": grid.copy(),
+                                           "positions": []})
+        surf, oldpos = old["surf"], old["positions"]
+
+        if oldpos == positions:
+            return surf
+
+        for _item in filtered:
+            _x, _y, _w, _h = _item["x"], _item["y"], _item["w"], _item["h"]
+            this_is_it_yo = (_x, _y, _w, _h) == (x, y, w, h)
+            _x *= 10
+            _y *= 10
+
+            _w *= 10
+            _h *= 10
+            _w -= 1
+            _h -= 1
+
+            itemblock = pygame.surface.Surface((_w, _h))
+            if this_is_it_yo:
+                itemblock.fill(interested)
+            else:
+                itemblock.fill(uninterested)
+
+            surf.blit(itemblock, (_x, _y))
+
+        self._tab_previews[tab] = {"surf": surf, "positions": positions}
+        return surf
 
     def clear_previews(self):
         self.Freeze()

@@ -21,6 +21,9 @@
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="acquisition.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="autoupdater.py">
       <SubType>Code</SubType>
     </Compile>
@@ -44,6 +47,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="main.pyw">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="promble.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="result.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="upgrade.py" />

@@ -2,7 +2,6 @@ import os
 import sys
 import threading
 import json
-import sqlite3
 import time
 
 import wx
@@ -10,12 +9,32 @@ import wx
 import interface
 import config
 import autoupdater
+import acquisition
 
-if os.name == "nt":
-    datadir = os.path.join(os.path.expanduser("~"), 
-                            r"AppData\Local\acquisition\data")
-elif os.name == "posix":
-    datadir = "~/.local/share/acquisition/data"
+class SettingsWatcher(threading.Thread):
+    #I'm lead to believe reading from a dict is threadsafe.  This class hinges
+    # on that.  RIP on in fluffy memories, sweet meme-artist.
+    def __init__(self, app):
+        super(SettingsWatcher, self).__init__()
+        self._app = app
+        self.update_copy()
+        self.check_interval = 15
+        self.next_check = 15
+
+    def update_copy(self):
+        self._last_settings = self._app.settings.copy()
+
+    def run(self):
+        while self._app.alive:
+            if self.next_check <= 0:
+                if not self._app.settings == self._last_settings:
+                    self._app.write_settings()
+                    self.update_copy()
+                self.next_check = self.check_interval
+            else:
+                self.next_check -= 1
+
+            time.sleep(1)
 
 def subdivide_recipes(itemlist):
     itemlist = itemlist[:]
@@ -44,16 +63,26 @@ def fill_inventories(recipes):
     for recipe in recipes:
         fits = True
         for item in recipe:
+            #check to see that the whole recipe fits
             if not i.place(item):
                 fits = False
+                #if it doesn't, get outta here
                 break
+
         if not fits:
+            #If it doesn't, it's 'cause the inventory got too full
+            # chunk that inventory to the output, make a new one, and carry on
             inventory.sort(key = _tabname)
             out.append(inventory)
             inventory = []
             i.clear()
         
         for item in recipe:
+            #add every item to the inventory
+            if not fits:
+                #Make sure the inventory actually accounts for them if we just
+                # cleared it.  BUGFIX
+                i.place(item)
             inventory.append(item)
 
     if inventory:
@@ -77,6 +106,9 @@ def inventorysort(itemlist):
     inventories = fill_inventories(recipes)
 
     return inventories
+
+def _nameorder(item):
+    return item["name"]
 
 def chancerecipes(items):
     #Get a count of each name in unignored stash tabs
@@ -108,50 +140,6 @@ def chancerecipes(items):
     recipes = alchs + chances
 
     return inventorysort(recipes)
-
-def _nameorder(item):
-    return item["name"]
-
-def get_probable_fpaths(ignored):
-    def mtime(x):
-        return os.path.getmtime(os.path.join(datadir, x))
-
-    listdir = [fname for fname in os.listdir(datadir)
-               if fname not in ignored]
-    probably = sorted(listdir, key = mtime)
-
-    return (os.path.join(datadir, fpath) for fpath in probably)
-
-class Result(object):
-    def __init__(self, succeeded, **kwargs):
-        self.success = succeeded
-        self.__dict__.update(kwargs)
-
-def get_items(fpaths_db, stash_tabs):
-    for path in fpaths_db:
-        try:
-            d = sqlite3.connect(path)
-            c = d.execute("SELECT value FROM data WHERE key = 'items'")
-            r = c.fetchone()
-            j = json.loads(str(r[0]))
-            j = [x for x in j
-                    if ("name" in x.keys())
-                    and ("_tab_label" in x.keys())
-                    and (x["_tab_label"] in stash_tabs)]
-            assert len(j) > 0
-            break
-        except:
-            pass
-    else: #nobreak
-        return Result(False)
-
-    for item in j:
-        item["name"] = item["name"].rsplit(">")[-1]
-
-    return Result(True,
-                  items = j, 
-                  mtime = os.path.getmtime(path),
-                  fname = os.path.split(path)[-1])
 
 class Inventory(object):
     def __init__(self):
@@ -207,14 +195,17 @@ class Inventory(object):
                 self._inventory[x + item_x][y + item_y] = True
 
 class AcquisitionThread(threading.Thread):
-    def __init__(self, app):
+    def __init__(self, app, league):
         super(AcquisitionThread, self).__init__()
         self._app = app
 
     def run(self):
         while self._app.alive:
-            res = get_items(get_probable_fpaths(self._app.ignored_files),
-                            self._app.settings["stash_tabs"])
+            league = self._app.settings["league"] if "league" in self._app.settings else None
+            res = acquisition.get_items(
+                acquisition.get_probable_fpaths(league),
+                self._app.settings["stash_tabs"])
+
             if not (res.success and res.mtime > self._app.last_update):
                 time.sleep(config.sleepytime)
                 continue
@@ -272,6 +263,7 @@ class AcquisitionThread(threading.Thread):
             #update app's recipe list
             self._app.lock.acquire()
             self._app.inventories = inventories
+            self._app.items = items
             self._app.lock.release()
             self._app.inventories_updated(new_recipes)
 
@@ -298,18 +290,22 @@ class App(wx.App):
 
         self.lock = threading.Lock()
         self.inventories = None
+        self.items = None
         self.alive = True
         self.last_update = 0
         self.ignored_files = []
-        self.file_ignored_just_RIGHT_NOW_OMG = False
 
-        self._acqthread = AcquisitionThread(self)
+        league = self.settings["league"] if "league" in self.settings else None
+        self._acqthread = AcquisitionThread(self, league)
         self._updater = autoupdater.Updater(self, self._update_available,
                                             "Asday", "WhatAreTheChances")
+        self._settingswatcher = SettingsWatcher(self)
+
         self.update_available = False
 
         self._acqthread.start()
         self._updater.start()
+        self._settingswatcher.start()
         
         if not self.settings["stash_tabs"]:
             wx.CallAfter(self.launch_settings_window)
@@ -317,9 +313,17 @@ class App(wx.App):
         self.MainLoop()
 
         self.alive = False
+
+        #Need to join the settingswatcher before we perform the final settings
+        # write
+        self._settingswatcher.join()
+
+        self.write_settings()
+
         self._acqthread.join()
         self._updater.join()
 
+    def write_settings(self):
         try:
             with file("settings.cfg", "w") as f:
                 json.dump(self.settings, f)
@@ -366,7 +370,7 @@ class App(wx.App):
             size = (w, h)
         except KeyError:
             position = wx.DefaultPosition
-            size = (500, 537)
+            size = (610, 537)
 
         self._updateframe = interface.update.Main(self, self.local_version,
                                                   self.remote_version,
@@ -385,11 +389,15 @@ class App(wx.App):
 
     def launch_settings_window(self):
         if not self._settingsframe:
-            self._settingsframe = interface.settings.Main(self)
+            self._settingsframe = interface.settings.Main(
+                self, self.get_current_league())
         style = self._settingsframe.GetWindowStyle()
         self._settingsframe.SetWindowStyle(style | wx.STAY_ON_TOP)
         self._settingsframe.Raise()
         self._settingsframe.SetWindowStyle(style)
+
+    def get_current_league(self):
+        return self.settings["league"] if "league" in self.settings else None
 
     def settings_window_closed(self):
         self._settingsframe = None
@@ -418,11 +426,6 @@ class App(wx.App):
     def update(self):
         autoupdater.update(self._updater, os.getpid(), sys.argv[0])
         self.quit()
-
-    def ignore_current_file(self):
-        self.ignored_files.append(self.current_file)
-        self.last_update = 0
-        self.file_ignored_just_RIGHT_NOW_OMG = True
 
     def quit(self):
         self._trayicon.RemoveIcon()

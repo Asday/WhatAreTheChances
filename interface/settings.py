@@ -1,9 +1,25 @@
+import threading
+
 import wx
+import wx.lib.newevent
+
+import acquisition
+
+class LeagueFinder(threading.Thread):
+    def __init__(self, frame, evt_complete):
+        super(LeagueFinder, self).__init__()
+        self._frame = frame
+        self._evt_complete = evt_complete
+
+    def run(self):
+        wx.PostEvent(self._frame,
+                     self._evt_complete(leagues = acquisition.get_leagues()))
 
 class Main(wx.Frame):
-    def __init__(self, app):
+    def __init__(self, app, current_league):
         self._app = app
         self._updated = True
+        self._current_league = current_league
 
         if self._app.settings["stash_tabs"]:
             lowest = self._app.settings["stash_tabs_lowest"]
@@ -29,6 +45,17 @@ class Main(wx.Frame):
         sizer_main.AddSpacer((0, 0), 1, wx.EXPAND, 5)
         
         sizer_centred = wx.BoxSizer(wx.VERTICAL)
+
+        group_league = wx.StaticBoxSizer(wx.StaticBox(self.panel_bg, wx.ID_ANY, u"League"), wx.VERTICAL)
+        
+        self.choice_league = wx.Choice(self.panel_bg, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, [], 0)
+        self.choice_league.SetSelection(999)
+        self.choice_league.Enable(False)
+        group_league.Add(self.choice_league, 0, wx.ALL | wx.EXPAND, 5)
+        
+        
+        sizer_centred.Add(group_league, 1, wx.EXPAND, 5)
+
         
         group_numbered = wx.StaticBoxSizer(wx.StaticBox(self.panel_bg, wx.ID_ANY, u"Numbered tabs to check:"), wx.HORIZONTAL)
         
@@ -67,7 +94,7 @@ class Main(wx.Frame):
         sizer_actions.AddSpacer((0, 0), 1, wx.EXPAND, 5)
         
         self.button_check_for_updates = wx.Button(self.panel_bg, wx.ID_ANY, u"Check for updates", wx.DefaultPosition, wx.DefaultSize, 0)
-        sizer_actions.Add(self.button_check_for_updates, 0, wx.ALL | wx.ALIGN_RIGHT, 5)
+        sizer_actions.Add(self.button_check_for_updates, 0, wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         
         
         sizer_centred.Add(sizer_actions, 1, wx.EXPAND, 5)
@@ -89,19 +116,25 @@ class Main(wx.Frame):
         self.Layout()
         sizer_bg.Fit(self)
 
+        got_leagues, self.evt_got_leagues = wx.lib.newevent.NewEvent()
+
         self.setbinds()
+
+        LeagueFinder(self, got_leagues).start()
 
         self.Show()
 
     def setbinds(self):
         self.Bind(wx.EVT_CLOSE, self._on_close)
         self.Bind(wx.EVT_IDLE, self._on_idle)
-        self.spin_from.Bind(wx.EVT_SPIN, self._on_updated)
-        self.spin_to.Bind(wx.EVT_SPIN, self._on_updated)
+        self.Bind(self.evt_got_leagues, self._got_leagues)
+        self.choice_league.Bind(wx.EVT_CHOICE, self._on_league)
+        self.spin_from.Bind(wx.EVT_SPINCTRL, self._on_updated)
+        self.spin_to.Bind(wx.EVT_SPINCTRL, self._on_updated)
         self.text_unnumbered.Bind(wx.EVT_TEXT, self._on_updated)
         self.button_check_for_updates.Bind(wx.EVT_BUTTON, self._on_check)
 
-    def _on_updated(self, event):
+    def _on_updated(self, event = None):
         self._updated = True
 
     def _on_idle(self, event):
@@ -112,11 +145,24 @@ class Main(wx.Frame):
                       self.text_unnumbered.GetValue().split(",")]
             stash_tabs = [str(x) for x in xrange(lowest, highest + 1)]
             stash_tabs.extend(extras)
+            league = self.choice_league.GetStringSelection()
+            if league:
+                self._app.settings["league"] = league
             self._app.settings["stash_tabs"] = stash_tabs
             self._app.settings["stash_tabs_lowest"] = lowest
             self._app.settings["stash_tabs_highest"] = highest
             self._app.settings["stash_tabs_extras"] = extras
             self._updated = False
+
+    def _got_leagues(self, event):
+        self.choice_league.SetItems(event.leagues)
+        if self._current_league:
+            self.choice_league.SetStringSelection(self._current_league)
+        self.choice_league.Enable()
+
+    def _on_league(self, event):
+        self._on_updated()
+        self._app.last_update = 0
 
     def _on_check(self, event):
         self._app.check_for_updates()

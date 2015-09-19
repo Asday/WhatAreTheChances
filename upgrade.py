@@ -110,13 +110,20 @@ class Extractor(threading.Thread):
         zip.extractall("__patch")
         zip.close()
 
+        #Make way
         folder = os.listdir("__patch")[0]
-        for fname in os.listdir(os.path.join("__patch", folder)):
-            try:
-                os.remove(fname)
-            except:
-                pass
-            shutil.move(os.path.join("__patch", folder, fname), fname)
+        root = os.path.join("__patch", folder)
+        for path, folders, fnames in os.walk(root):
+            path = path[len(root) + 1:]
+            for fname in fnames:
+                os.remove(os.path.join(path, fname))
+
+        #Update
+        for path, folder, fnames in os.walk(root):
+            for fname in fnames:
+                #move
+                os.rename(os.path.join(path, fname),
+                          os.path.join(path[len(root) + 1:], fname))
 
         os.remove("__patch.zip")
         shutil.rmtree("__patch")
@@ -167,7 +174,8 @@ class Main(wx.Frame):
         
         sizer_waiting.AddSpacer((0, 0), 1, wx.EXPAND, 5)
         
-        self.label_waiting = wx.StaticText(self.panel_waiting, wx.ID_ANY, u"Waiting for %s to close.  If this hasn't happened with some manner of rapidity, do please open the task manager and kill it yourself.  The PID should be %s.", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.label_waiting = wx.StaticText(self.panel_waiting, wx.ID_ANY, u"", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.label_waiting.skele = "Waiting for %s to close.  If this hasn't happened with some manner of rapidity, do please open the task manager and kill it yourself.  The PID should be %s."
         self.label_waiting.Wrap(250)
         sizer_waiting.Add(self.label_waiting, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 5)
         
@@ -222,18 +230,21 @@ class Main(wx.Frame):
         self.panel_bg.Layout()
         sizer_main.Fit(self.panel_bg)
         sizer_bg.Add(self.panel_bg, 1, wx.EXPAND, 5)
-        
-        
-        self.SetSizer(sizer_bg)
-        self.Layout()
-
-        self.Show()
 
         (self.pid, patch_notes_file,
          remote_resource, self.restart_file) = sys.argv[1:]
 
         self.label_downloading.SetLabel(
             self.label_downloading.skele % remote_resource)
+
+        self.label_waiting.SetLabel(
+            self.label_waiting.skele % (self.restart_file, self.pid))
+        
+        
+        self.SetSizer(sizer_bg)
+        self.Layout()
+
+        self.Show()
 
         with file(patch_notes_file, "r") as f:
             patch_notes = f.read()
@@ -273,7 +284,6 @@ class Main(wx.Frame):
     def extract(self, event):
         self.listbook_stage.SetSelection(2)
 
-        extracting_done_id = wx.NewId()
         extracting_done, evt_extracting_done = wx.lib.newevent.NewEvent()
         self.Bind(evt_extracting_done, self.finished)
 
