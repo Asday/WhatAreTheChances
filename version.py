@@ -1,1 +1,1 @@
-version = "[1, \"2b\"]"
+version = '[1, "2b"]'
