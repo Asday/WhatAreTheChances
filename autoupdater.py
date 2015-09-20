@@ -14,7 +14,7 @@ class Updater(threading.Thread):
         self.user = githubuser
         self.repo = repo
         self.branch = branch
-        self.version = json.loads(version.version)
+        self.version = [str(sub) for sub in json.loads(version.version)]
         self.patch_notes = ""
         self._next_check = 15
         self.remote_version = [0]
@@ -60,8 +60,8 @@ class Updater(threading.Thread):
             # not available or unavailable
             return 0
 
-        version = json.loads(version[0].split("=")[-1].strip("\" "))
-        return version
+        version = json.loads(version[0].split("=")[-1].strip("\"\' "))
+        return [str(sub) for sub in version]
 
     def update_patch_notes(self):
         self.patch_notes = self._get_github_file("Patch%20Notes.txt")
