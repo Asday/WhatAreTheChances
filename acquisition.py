@@ -21,8 +21,7 @@ def get_probable_fpaths(league):
             listdir = [path]
     
     if not path:
-        listdir = [fname for fname in os.listdir(datadir)
-                   if fname not in ignored]
+        listdir = os.listdir(datadir)
 
     probably = sorted(listdir, key = mtime)
 
@@ -45,8 +44,10 @@ def get_path_by_league(league):
     for path in os.listdir(datadir):
         try:
             j = read_item_db(os.path.join(datadir, path))
-            if j[0]["league"] == league:
-                return path
+            for item in j:
+                if item.has_key("league"):
+                    if item["league"] == league:
+                        return path
         except:
             pass
     return False
