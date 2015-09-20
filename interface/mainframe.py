@@ -170,29 +170,30 @@ class Main(wx.Frame):
                                            "positions": []})
         surf, oldpos = old["surf"], old["positions"]
 
-        if oldpos == positions:
-            return surf
+        if oldpos != positions:
+            for _item in filtered:
+                _x, _y, _w, _h = _item["x"], _item["y"], _item["w"], _item["h"]
+                this_is_it_yo = (_x, _y, _w, _h) == (x, y, w, h)
+                _x *= 10
+                _y *= 10
 
-        for _item in filtered:
-            _x, _y, _w, _h = _item["x"], _item["y"], _item["w"], _item["h"]
-            this_is_it_yo = (_x, _y, _w, _h) == (x, y, w, h)
-            _x *= 10
-            _y *= 10
+                _w *= 10
+                _h *= 10
+                _w -= 1
+                _h -= 1
 
-            _w *= 10
-            _h *= 10
-            _w -= 1
-            _h -= 1
-
-            itemblock = pygame.surface.Surface((_w, _h))
-            if this_is_it_yo:
-                itemblock.fill(interested)
-            else:
+                itemblock = pygame.surface.Surface((_w, _h))
                 itemblock.fill(uninterested)
+                surf.blit(itemblock, (_x, _y))
+                self._tab_previews[tab] = {"surf": surf, 
+                                           "positions": positions}
+        
+        surf = surf.copy()
 
-            surf.blit(itemblock, (_x, _y))
+        itemblock = pygame.surface.Surface(((w * 10) - 1, (h * 10) - 1))
+        itemblock.fill(interested)
+        surf.blit(itemblock, (x * 10, y * 10))
 
-        self._tab_previews[tab] = {"surf": surf, "positions": positions}
         return surf
 
     def clear_previews(self):
