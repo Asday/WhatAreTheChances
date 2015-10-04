@@ -112,6 +112,8 @@ def _nameorder(item):
 
 def chancerecipes(items):
     #Get a count of each name in unignored stash tabs
+    items = [item for item in items if item["rarity"] == "Rare"]
+
     names = [item["name"]
                 for item 
                 in items]

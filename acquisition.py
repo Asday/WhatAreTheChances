@@ -10,6 +10,16 @@ if os.name == "nt":
 elif os.name == "posix":
     datadir = "~/.local/share/acquisition/data"
 
+rarities = {
+    0: "Normal",
+    1: "Magic",
+    2: "Rare",
+    3: "Unique",
+    4: "Gem",
+    5: "Currency",
+    6: "Card",
+    }
+
 def get_probable_fpaths(league):
     def mtime(x):
         return os.path.getmtime(os.path.join(datadir, x))
@@ -86,6 +96,9 @@ def get_items(fpaths_db, stash_tabs = None, filter_tabs = True):
 
     for item in _json:
         item["name"] = item["name"].rsplit(">")[-1]
+        item["typeLine"] = item["typeLine"].rsplit(">")[-1]
+        if "frameType" in item:
+            item["rarity"] = rarities[item["frameType"]]
 
     return Result(True,
                   items = _json, 

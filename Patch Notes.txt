@@ -16,6 +16,9 @@ Fixed an exception being thrown if the settings window was closed before What
  doesn't affect anyone at all, as the thread that was killed by that exception
  dies at that point anyway upon success, but there you go.  Tidier now.
 
+What Are The Chances no longer believes you can vendor two of the same unique
+ for a chance.
+
 v1.2c
 
 ################################## Bugfixes ###################################
