@@ -67,6 +67,7 @@
     <Content Include="Patch Notes.txt" />
     <Content Include="todo.txt" />
     <Content Include="README.md" />
+    <Content Include="totest.txt" />
   </ItemGroup>
   <Import Project="$(PtvsTargetsFile)" Condition="Exists($(PtvsTargetsFile))" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="!Exists($(PtvsTargetsFile))" />

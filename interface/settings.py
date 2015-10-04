@@ -12,8 +12,11 @@ class LeagueFinder(threading.Thread):
         self._evt_complete = evt_complete
 
     def run(self):
-        wx.PostEvent(self._frame,
-                     self._evt_complete(leagues = acquisition.get_leagues()))
+        evt = self._evt_complete(leagues = acquisition.get_leagues())
+        try:
+            wx.PostEvent(self._frame, evt)
+        except TypeError: #closed the window before the leagues were checked
+            pass
 
 class Main(wx.Frame):
     def __init__(self, app, current_league):
@@ -29,6 +32,11 @@ class Main(wx.Frame):
             lowest = 0
             highest = 65
             extras = ""
+
+        if "stash_tabs_filter" in self._app.settings:
+            filtered = self._app.settings["stash_tabs_filter"]
+        else:
+            filtered = True
 
         wx.Frame.__init__(self, parent = None, id = wx.ID_ANY, title = u"Settings :D", pos = wx.DefaultPosition, size = wx.Size(-1,-1), style = wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
         
@@ -55,6 +63,13 @@ class Main(wx.Frame):
         
         
         sizer_centred.Add(group_league, 1, wx.EXPAND, 5)
+        
+        
+        sizer_centred.AddSpacer((0, 15), 0, 0, 5)
+        
+        self.check_filter = wx.CheckBox(self.panel_bg, wx.ID_ANY, u"Filter tabs?", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.check_filter.SetValue(filtered)
+        sizer_centred.Add(self.check_filter, 0, wx.ALL, 5)
 
         
         group_numbered = wx.StaticBoxSizer(wx.StaticBox(self.panel_bg, wx.ID_ANY, u"Numbered tabs to check:"), wx.HORIZONTAL)
@@ -83,6 +98,9 @@ class Main(wx.Frame):
         
         
         sizer_centred.Add(group_unnumbered, 0, wx.EXPAND, 5)
+        
+        self.line_settings_actions = wx.StaticLine(self.panel_bg, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL)
+        sizer_centred.Add(self.line_settings_actions, 0, wx.EXPAND | wx.ALL, 5)
         
         sizer_actions = wx.BoxSizer(wx.HORIZONTAL)
         
@@ -116,6 +134,8 @@ class Main(wx.Frame):
         self.Layout()
         sizer_bg.Fit(self)
 
+        self.update_interface()
+
         got_leagues, self.evt_got_leagues = wx.lib.newevent.NewEvent()
 
         self.setbinds()
@@ -129,6 +149,7 @@ class Main(wx.Frame):
         self.Bind(wx.EVT_IDLE, self._on_idle)
         self.Bind(self.evt_got_leagues, self._got_leagues)
         self.choice_league.Bind(wx.EVT_CHOICE, self._on_league)
+        self.check_filter.Bind(wx.EVT_CHECKBOX, self._on_filter)
         self.spin_from.Bind(wx.EVT_SPINCTRL, self._on_updated)
         self.spin_to.Bind(wx.EVT_SPINCTRL, self._on_updated)
         self.text_unnumbered.Bind(wx.EVT_TEXT, self._on_updated)
@@ -146,12 +167,15 @@ class Main(wx.Frame):
             stash_tabs = [str(x) for x in xrange(lowest, highest + 1)]
             stash_tabs.extend(extras)
             league = self.choice_league.GetStringSelection()
+            filter_tabs = self.check_filter.GetValue()
             if league:
                 self._app.settings["league"] = league
             self._app.settings["stash_tabs"] = stash_tabs
             self._app.settings["stash_tabs_lowest"] = lowest
             self._app.settings["stash_tabs_highest"] = highest
             self._app.settings["stash_tabs_extras"] = extras
+            self._app.settings["stash_tabs_filter"] = filter_tabs
+            self._app.recheck_items()
             self._updated = False
 
     def _got_leagues(self, event):
@@ -162,7 +186,18 @@ class Main(wx.Frame):
 
     def _on_league(self, event):
         self._on_updated()
-        self._app.last_update = 0
+        self._app.recheck_items()
+
+    def _on_filter(self, event):
+        self._on_updated()
+
+        self.update_interface()
+
+    def update_interface(self):
+        enable = self.check_filter.GetValue()
+
+        for widget in [self.spin_from, self.spin_to, self.text_unnumbered]:
+            widget.Enable(enable)
 
     def _on_check(self, event):
         self._app.check_for_updates()

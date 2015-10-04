@@ -163,7 +163,10 @@ class Main(wx.Frame):
         x, y, w, h = item["x"], item["y"], item["w"], item["h"]
         tab = item["_tab_label"]
 
-        filtered = [i for i in self.items if i["_tab_label"] == tab]
+        filtered = [i for i in self.items 
+                    if i["_tab_label"] == tab
+                    and (i.get("_socketed", False) == False)]
+
         positions = sorted([(i["x"], i["y"], i["w"], i["h"])
                             for i in filtered])
         old = self._tab_previews.get(tab, {"surf": grid.copy(),

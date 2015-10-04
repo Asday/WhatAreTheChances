@@ -1,3 +1,21 @@
+v1.3
+
+################################## Features ###################################
+You can now _not_ filter your tabs, and just check EVERYTHING for recipes.
+ Useful for checking your hardcore/standardo tabs when leagues merge, due to
+ the huge influx of (Remove-only).
+
+################################ Improvements #################################
+Cleaned up the code a little.  Not user facing.
+
+################################## Bugfixes ###################################
+Socketed gems broke item previews.  NO LONGER.
+
+Fixed an exception being thrown if the settings window was closed before What
+ Are The Chances figured out what leagues you have data from.  Fairly sure this
+ doesn't affect anyone at all, as the thread that was killed by that exception
+ dies at that point anyway upon success, but there you go.  Tidier now.
+
 v1.2c
 
 ################################## Bugfixes ###################################
