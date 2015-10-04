@@ -10,6 +10,16 @@ if os.name == "nt":
 elif os.name == "posix":
     datadir = "~/.local/share/acquisition/data"
 
+rarities = {
+    0: "Normal",
+    1: "Magic",
+    2: "Rare",
+    3: "Unique",
+    4: "Gem",
+    5: "Currency",
+    6: "Card",
+    }
+
 def get_probable_fpaths(league):
     def mtime(x):
         return os.path.getmtime(os.path.join(datadir, x))
@@ -31,11 +41,11 @@ def get_leagues():
     leagues = []
     for path in os.listdir(datadir):
         try:
-            j = read_item_db(os.path.join(datadir, path))
-            j = [x["league"] for x in j
-                 if ("league" in x.keys())]
-            l = set(j)
-            leagues.extend(l)
+            _json = read_item_db(os.path.join(datadir, path))
+            filtered = [item["league"] for item in _json
+                        if ("league" in item.keys())]
+            _leagues = set(filtered)
+            leagues.extend(_leagues)
         except:
             pass
     return leagues
@@ -43,8 +53,8 @@ def get_leagues():
 def get_path_by_league(league):
     for path in os.listdir(datadir):
         try:
-            j = read_item_db(os.path.join(datadir, path))
-            for item in j:
+            _json = read_item_db(os.path.join(datadir, path))
+            for item in _json:
                 if item.has_key("league"):
                     if item["league"] == league:
                         return path
@@ -54,35 +64,44 @@ def get_path_by_league(league):
 
 def read_item_db(path):
     try:
-        d = sqlite3.connect(path)
-        c = d.execute("SELECT value FROM data WHERE key = 'items'")
-        r = c.fetchone()
-        j = json.loads(str(r[0]))
+        db = sqlite3.connect(path)
+        cursor = db.execute("SELECT value FROM data WHERE key = 'items'")
+        row = cursor.fetchone()
+        _json = json.loads(str(row[0]))
     except:
         return False
-    return j
+    return _json
 
-def get_items(fpaths_db, stash_tabs):
+def get_items(fpaths_db, stash_tabs = None, filter_tabs = True):
+    stash_tabs = [] if stash_tabs == None else stash_tabs
     stash_tabs = [unicode(stash_tab) for stash_tab in stash_tabs]
     for path in fpaths_db:
         try:
-            j = read_item_db(os.path.join(datadir, path))
-            j = [x for x in j
-                    if ("name" in x.keys())
-                    and ("_tab_label" in x.keys())
-                    and (x["_tab_label"] in stash_tabs)]
-            assert len(j) > 0
+            _json = read_item_db(os.path.join(datadir, path))
+
+            _json = [val for val in _json
+                     if ("name" in val.keys())
+                     and ("_tab_label" in val.keys())]
+
+            if filter_tabs:
+                _json = [item for item in _json
+                         if item["_tab_label"] in stash_tabs]
+
+            assert len(_json) > 0
             break
         except:
             pass
     else: #nobreak
         return Result(False)
 
-    for item in j:
+    for item in _json:
         item["name"] = item["name"].rsplit(">")[-1]
+        item["typeLine"] = item["typeLine"].rsplit(">")[-1]
+        if "frameType" in item:
+            item["rarity"] = rarities[item["frameType"]]
 
     return Result(True,
-                  items = j, 
+                  items = _json, 
                   mtime = os.path.getmtime(path),
                   fname = os.path.split(path)[-1],
-                  league = j[0]["league"])
+                  league = _json[0]["league"])

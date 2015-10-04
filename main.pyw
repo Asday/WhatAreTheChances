@@ -112,6 +112,8 @@ def _nameorder(item):
 
 def chancerecipes(items):
     #Get a count of each name in unignored stash tabs
+    items = [item for item in items if item["rarity"] == "Rare"]
+
     names = [item["name"]
                 for item 
                 in items]
@@ -201,10 +203,20 @@ class AcquisitionThread(threading.Thread):
 
     def run(self):
         while self._app.alive:
-            league = self._app.settings["league"] if "league" in self._app.settings else None
+            if self._app.last_update_touched:
+                self._app.last_update_touched = False
+
+            if "league" in self._app.settings:
+                league = self._app.settings["league"]
+            else:
+                league = None
+
+            tabs = self._app.settings["stash_tabs"]
+            filter_tabs = self._app.settings.get("stash_tabs_filter", True)
+
             res = acquisition.get_items(
                 acquisition.get_probable_fpaths(league),
-                self._app.settings["stash_tabs"])
+                tabs, filter_tabs)
 
             if not (res.success and res.mtime > self._app.last_update):
                 time.sleep(config.sleepytime)
@@ -268,7 +280,13 @@ class AcquisitionThread(threading.Thread):
             self._app.inventories_updated(new_recipes)
 
             self._app.current_file = fname
-            self._app.last_update = mtime
+            #While we were looping, something else may have updated this value,
+            # so we need to heed the value it currently has on the next
+            # iteration, hence, we only update the value ourselves if nothing
+            # else has.
+            if not self._app.last_update_touched:
+                self._app.last_update = mtime
+
             time.sleep(config.sleepytime)
 
 class App(wx.App):
@@ -293,6 +311,7 @@ class App(wx.App):
         self.items = None
         self.alive = True
         self.last_update = 0
+        self.last_update_touched = False
         self.ignored_files = []
 
         league = self.settings["league"] if "league" in self.settings else None
@@ -426,6 +445,10 @@ class App(wx.App):
     def update(self):
         autoupdater.update(self._updater, os.getpid(), sys.argv[0])
         self.quit()
+
+    def recheck_items(self):
+        self.last_update_touched = True
+        self.last_update = 0
 
     def quit(self):
         self._trayicon.RemoveIcon()

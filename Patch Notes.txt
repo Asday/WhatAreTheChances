@@ -1,3 +1,35 @@
+v1.3
+
+############################## Planned Features ###############################
+Long item/tab names look awful for previews.  Fixing this issue will let me
+ "fold" multiple items into the same preview, if they reside in the same tab,
+ which will make it easier to do all the recipes, at least for me.  Any ideas
+ on how to lay out the names above the previews _in a way that looks nice_, hit
+ me up, @Oddish ingame, or saraandzuka+watc@gmail.com.
+
+################################## Features ###################################
+You can now _not_ filter your tabs, and just check EVERYTHING for recipes.
+ Useful for checking your hardcore/standardo tabs when leagues merge, due to
+ the huge influx of (Remove-only).
+
+################################ Improvements #################################
+Cleaned up the code a little.  Not user facing.
+
+The main window now doesn't cycle through all your items and take forever when
+ closing.
+
+################################## Bugfixes ###################################
+Socketed gems broke item previews.  NO LONGER.
+
+Fixed an exception being thrown if the settings window was closed before What
+ Are The Chances figured out what leagues you have data from.  Fairly sure this
+ doesn't affect anyone at all, as the thread that was killed by that exception
+ dies at that point anyway upon success, but there you go.  Tidier now.
+
+What Are The Chances no longer believes you can vendor two of the same unique
+ for a chance.
+
+-------------------------------------------------------------------------------
 v1.2c
 
 ################################## Bugfixes ###################################
