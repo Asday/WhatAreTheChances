@@ -23,6 +23,7 @@ class Main(wx.Frame):
     def __init__(self, app, position, size):
         self._app = app
         self._tab_previews = {}
+        self._resized = False
 
         wx.Frame.__init__(self, parent = None, id = wx.ID_ANY, title = u"What are the chances?", pos = position, size = size, style = wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
         
@@ -95,11 +96,30 @@ class Main(wx.Frame):
         self.Show()
 
     def setbinds(self):
+        self.Bind(wx.EVT_SIZE, self._on_size)
+        self.Bind(wx.EVT_IDLE, self._on_idle)
         self.Bind(wx.EVT_CLOSE, self._on_close)
         self.tree_inventories.Bind(wx.EVT_TREE_SEL_CHANGED, 
                                self._on_inventory_selected)
 
+    def _on_size(self, event):
+        self._resized = True
+        event.Skip()
+
+    def _on_idle(self, event):
+        if self._resized:
+            self.Refresh()
+            self._resized = False
+        event.Skip()
+
     def _on_close(self, event):
+        #Improvement:  Previously, when closing the window, every tree item was
+        # being selected under the current selection as part of closing the
+        # window.  This caused it to take forever triggering
+        # self._on_inventory_selected a bunch of times, taking up to about a
+        # minute if the user has about 400 stash tabs.
+        self.tree_inventories.Unbind(wx.EVT_TREE_SEL_CHANGED)
+
         x, y = self.GetPosition()
         w, h = self.GetSize()
         self._app.mainframe_closed(x, y, w, h)
