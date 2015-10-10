@@ -28,6 +28,7 @@ class Main(wx.TaskBarIcon):
         menu = wx.Menu()
         self.create_menu_item(menu, "Show recipes", self.on_show)
         self.create_menu_item(menu, "Settings", self.on_settings)
+        self.create_menu_item(menu, "Clear file location cache", self.on_clear)
         if self._app.update_available:
             self.create_menu_item(menu, "Update", self.on_update)
         else:
@@ -49,6 +50,9 @@ class Main(wx.TaskBarIcon):
 
     def on_settings(self, event):
         self._app.launch_settings_window()
+
+    def on_clear(self, event):
+        self._app.clear_acq_cache()
 
     def on_update(self, event):
         self._app.launch_update_window()

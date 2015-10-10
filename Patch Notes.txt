@@ -1,3 +1,44 @@
+v1.4
+
+############################## Planned Features ###############################
+Long item/tab names look awful for previews.  Fixing this issue will let me
+ "fold" multiple items into the same preview, if they reside in the same tab,
+ which will make it easier to do all the recipes, at least for me.  Any ideas
+ on how to lay out the names above the previews _in a way that looks nice_, hit
+ me up, @Oddish ingame, or saraandzuka+watc@gmail.com.
+
+################################## Features ###################################
+New hidden feature!  Right click on an item preview to put a big cross over it
+ and any items with the same name, until you update the items or close the
+ window.  This is useful for when you have your tabs unfiltered, and wanna
+ visually remind yourself "nah I can't do that recipe bro."  If anyone has a
+ good way to convey this functionality to the user elegantly so it isn't a
+ hidden feature any longer, hit me up, I'd love to hear it.
+
+To facilitate the above, an item preview is now shown when you hover over its
+ containing tab preview.  This is awesome by the way.  I _think_ the explicit
+ mods are in the same order as they are ingame, but I don't really care if
+ they're not.  Not a big deal to me.  If it is to you, let me know.
+
+################################ Improvements #################################
+The sunken boxes the previews reside in now no longer stretch uglyly with long
+ tab/item names.
+
+Whether the main window was maximised or not is now remembered.
+
+WhatAreTheChances now checks Acquisition's data a little less aggressively.
+ If you have a LOT of tabs, WhatAreTheChances will no longer take up a whole
+ core on your machine.  This won't have been an issue for many; with 373 stash
+ tabs, my core was in use about 50% of the time.  Still, environmentally aware
+ programming.
+
+################################## Bugfixes ###################################
+Fixed up the sorting of items, they're now sorted by the order your tabs are
+ actually in ingame.  I think.
+
+Previews of tabs that share names with other tabs are now rendered correctly.
+
+-------------------------------------------------------------------------------
 v1.3
 
 ############################## Planned Features ###############################
