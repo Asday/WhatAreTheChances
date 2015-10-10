@@ -1,0 +1,1 @@
+nconvert -rmeta -overwrite *.*
