@@ -20,22 +20,18 @@ rarities = {
     6: "Card",
     }
 
-def get_probable_fpaths(league):
-    def mtime(x):
-        return os.path.getmtime(os.path.join(datadir, x))
+attr_to_col = {
+    "G": "W",
+    "S": "R",
+    "I": "B",
+    "D": "G",
+    }
 
-    path = None
-    if league:
-        path = get_path_by_league(league)
-        if path:
-            listdir = [path]
-    
-    if not path:
-        listdir = os.listdir(datadir)
+_cache_leagues = {}
 
-    probably = sorted(listdir, key = mtime)
-
-    return (os.path.join(datadir, fpath) for fpath in probably)
+def clear_cache():
+    global _cache_leagues
+    _cache_leagues = {}
 
 def get_leagues():
     leagues = []
@@ -50,14 +46,27 @@ def get_leagues():
             pass
     return leagues
 
-def get_path_by_league(league):
+def get_fname_by_league(league):
+    if league in _cache_leagues:
+        #Bug?  If the file is renamed, the cache is invalidated and a restart
+        # is needed.  Is that even a big deal?  KEK
+        return _cache_leagues[league]
+
+    if not league: #Uninitialised settings, get most recently modified
+        lstdir = os.listdir(datadir)
+        lstdir.sort(key = lambda x: os.path.getmtime(os.path.join(datadir, x)))
+        return lstdir[-1]
+
     for path in os.listdir(datadir):
         try:
             _json = read_item_db(os.path.join(datadir, path))
             for item in _json:
                 if item.has_key("league"):
                     if item["league"] == league:
+                        _cache_leagues[league] = path
                         return path
+                    else:
+                        break
         except:
             pass
     return False
@@ -72,27 +81,28 @@ def read_item_db(path):
         return False
     return _json
 
-def get_items(fpaths_db, stash_tabs = None, filter_tabs = True):
+def get_items(league, stash_tabs = None, filter_tabs = False):
     stash_tabs = [] if stash_tabs == None else stash_tabs
     stash_tabs = [unicode(stash_tab) for stash_tab in stash_tabs]
-    for path in fpaths_db:
-        try:
-            _json = read_item_db(os.path.join(datadir, path))
 
-            _json = [val for val in _json
-                     if ("name" in val.keys())
-                     and ("_tab_label" in val.keys())]
+    path = get_fname_by_league(league)
+    
+    try:
+        _json = read_item_db(os.path.join(datadir, path))
 
-            if filter_tabs:
-                _json = [item for item in _json
-                         if item["_tab_label"] in stash_tabs]
+        _json = [val for val in _json
+                    if ("name" in val.keys())
+                    and ("_tab_label" in val.keys())]
 
-            assert len(_json) > 0
-            break
-        except:
-            pass
-    else: #nobreak
+        if filter_tabs:
+            _json = [item for item in _json
+                        if item["_tab_label"] in stash_tabs]
+
+        assert len(_json) > 0
+    except BaseException as e:
+        print(e)
         return Result(False)
+    
 
     for item in _json:
         item["name"] = item["name"].rsplit(">")[-1]
@@ -100,8 +110,29 @@ def get_items(fpaths_db, stash_tabs = None, filter_tabs = True):
         if "frameType" in item:
             item["rarity"] = rarities[item["frameType"]]
 
+        if item.has_key("sockets"):
+            group = None
+            links = []
+            for socket in item["sockets"]:
+                if socket["group"] == group:
+                    links.append("-")
+                else:
+                    links.append(" ")
+                links.append(attr_to_col[socket["attr"]])
+                group = socket["group"]
+
+            links = "".join(links)[1:]
+
+            item["links"] = links
+
     return Result(True,
                   items = _json, 
-                  mtime = os.path.getmtime(path),
                   fname = os.path.split(path)[-1],
                   league = _json[0]["league"])
+
+def get_mtime(league):
+    fname = get_fname_by_league(league)
+    if fname:
+        return os.path.getmtime(os.path.join(datadir, fname))
+    
+    return False

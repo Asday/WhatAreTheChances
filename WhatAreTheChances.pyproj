@@ -61,9 +61,25 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="font\" />
+    <Folder Include="im\" />
     <Folder Include="interface\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="font\Fontin-Bold.ttf" />
+    <Content Include="font\Fontin-Italic.ttf" />
+    <Content Include="font\Fontin-Regular.ttf" />
+    <Content Include="font\Fontin-SmallCaps.ttf" />
+    <Content Include="im\Orb_of_Chance.png" />
+    <Content Include="im\rare_left.png" />
+    <Content Include="im\rare_mid.png" />
+    <Content Include="im\rare_right.png" />
+    <Content Include="im\line.png" />
+    <Content Include="interface\B.png" />
+    <Content Include="interface\G.png" />
+    <Content Include="interface\link.png" />
+    <Content Include="interface\R.png" />
+    <Content Include="interface\W.png" />
     <Content Include="Patch Notes.txt" />
     <Content Include="todo.txt" />
     <Content Include="README.md" />
