@@ -53,7 +53,7 @@ def subdivide_recipes(itemlist):
     return out
 
 def key_sort_recipe_by_tab(recipe):
-    return min([item["_tab_label"] for item in recipe])
+    return min([int(item["inventoryId"][5:]) for item in recipe])
 
 def fill_inventories(recipes):
     out = []
@@ -72,7 +72,7 @@ def fill_inventories(recipes):
         if not fits:
             #If it doesn't, it's 'cause the inventory got too full
             # chunk that inventory to the output, make a new one, and carry on
-            inventory.sort(key = _tabname)
+            inventory.sort(key = key_tabname)
             out.append(inventory)
             inventory = []
             i.clear()
@@ -92,13 +92,8 @@ def fill_inventories(recipes):
 
     return out
 
-def _tabname(item):
-    try:
-        i = str(int(item["_tab_label"])).zfill(3)
-    except ValueError:
-        i = item["_tab_label"]
-
-    return i
+def key_tabname(item):
+    return int(item["inventoryId"][5:])
 
 def inventorysort(itemlist):
     recipes = subdivide_recipes(itemlist)
@@ -214,16 +209,19 @@ class AcquisitionThread(threading.Thread):
             tabs = self._app.settings["stash_tabs"]
             filter_tabs = self._app.settings.get("stash_tabs_filter", True)
 
-            res = acquisition.get_items(
-                acquisition.get_probable_fpaths(league),
-                tabs, filter_tabs)
+            mtime = acquisition.get_mtime(league)
 
-            if not (res.success and res.mtime > self._app.last_update):
+            if not mtime > self._app.last_update:
+                time.sleep(config.sleepytime)
+                continue
+
+            res = acquisition.get_items(league, tabs, filter_tabs)
+
+            if not res.success:
                 time.sleep(config.sleepytime)
                 continue
 
             items = res.items
-            mtime = res.mtime
             fname = res.fname
 
             inventories = chancerecipes(items)
@@ -270,7 +268,7 @@ class AcquisitionThread(threading.Thread):
 
             #sort the recipes properly
             for inventory in inventories:
-                inventory.sort(key = lambda item: item["_tab_label"].zfill(3))
+                inventory.sort(key = key_tabname)
 
             #update app's recipe list
             self._app.lock.acquire()
@@ -312,7 +310,6 @@ class App(wx.App):
         self.alive = True
         self.last_update = 0
         self.last_update_touched = False
-        self.ignored_files = []
 
         league = self.settings["league"] if "league" in self.settings else None
         self._acqthread = AcquisitionThread(self, league)
@@ -362,19 +359,23 @@ class App(wx.App):
             position = wx.DefaultPosition
             size = (1280, 720)
 
+        maximised = self.settings.get("main_maximised", False)
+
         if not self._mainframe:
-            self._mainframe = interface.mainframe.Main(self, position, size)
+            self._mainframe = interface.mainframe.Main(self, position, size,
+                                                       maximised)
         style = self._mainframe.GetWindowStyle()
         self._mainframe.SetWindowStyle(style | wx.STAY_ON_TOP)
         self._mainframe.Raise()
         self._mainframe.SetWindowStyle(style)
 
-    def mainframe_closed(self, x, y, w, h):
+    def mainframe_closed(self, x, y, w, h, maximised):
         self.settings.update(
             {"main_x": x,
              "main_y": y,
              "main_w": w,
-             "main_h": h}
+             "main_h": h,
+             "main_maximised": maximised}
             )
 
         self._mainframe = None
@@ -414,6 +415,9 @@ class App(wx.App):
         self._settingsframe.SetWindowStyle(style | wx.STAY_ON_TOP)
         self._settingsframe.Raise()
         self._settingsframe.SetWindowStyle(style)
+
+    def clear_acq_cache(self):
+        acquisition.clear_cache()
 
     def get_current_league(self):
         return self.settings["league"] if "league" in self.settings else None
