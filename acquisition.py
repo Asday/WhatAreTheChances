@@ -25,6 +25,7 @@ attr_to_col = {
     "S": "R",
     "I": "B",
     "D": "G",
+    False: "W",
     }
 
 _cache_leagues = {}
