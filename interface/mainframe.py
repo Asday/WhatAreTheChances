@@ -46,6 +46,9 @@ _spacer = pygame.surface.Surface((1, _pad))
 #endregion
 
 def make_socket_preview(item):
+    if "links" not in item:
+        return pygame.surface.Surface((0, 0))
+
     colours = item["links"][::2] #"R-G-B W" -> "RGBW"
     links = item["links"][1::2]  #"R-G-B W" -> "-- "
     socketcount = len(colours)
