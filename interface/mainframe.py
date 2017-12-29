@@ -287,8 +287,6 @@ class Main(wx.Frame):
         self.Refresh()
 
     def update_inventories(self, launch = False):
-        self.tree_inventories.DeleteChildren(self.tree_inventories.GetRootItem())
-        self.clear_previews()
 
         if self._app.inventories:
             self._app.lock.acquire()
@@ -303,6 +301,9 @@ class Main(wx.Frame):
                 self.Layout()
 
     def _on_show_updated(self, event = None):
+        self.tree_inventories.DeleteChildren(self.tree_inventories.GetRootItem())
+        self.clear_previews()
+
         self.button_show_updated.Hide()
         self.Layout()
 
