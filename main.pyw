@@ -94,14 +94,17 @@ def name_matching_recipe(items, matchcount):
     rares = [item for item in items if item["rarity"] == "Rare"]
     remainder = [item for item in items if item["rarity"] != "Rare"]
 
-    names = [item["name"] for item in rares]
+    identified_rares = [item for item in rares if item["identified"]]
+    remainder += [item for item in rares if not item["identified"]]
+
+    names = [item["name"] for item in identified_rares]
     counts = [names.count(name) for name in names]
 
     for i, count in enumerate(counts):
-        rares[i]["count"] = count
+        identified_rares[i]["count"] = count
 
-    candidates = [item for item in rares if item["count"] >= matchcount]
-    remainder += [item for item in rares if item["count"] < matchcount]
+    candidates = [item for item in identified_rares if item["count"] >= matchcount]
+    remainder += [item for item in identified_rares if item["count"] < matchcount]
 
     by_name = defaultdict(list)
     for item in candidates:
