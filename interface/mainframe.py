@@ -317,7 +317,8 @@ class Main(wx.Frame):
             for item in inventory:
                 self.tree_inventories.AppendItem(_i, item["name"] + " [" + item["_tab_label"] + "]")
 
-        self.tree_inventories.ExpandAll()
+        if self._app.settings.get("treeview_expanded", True):
+            self.tree_inventories.ExpandAll()
 
         top = self.tree_inventories.GetFirstChild(self.tree_inventories.rootid)[0] #KEK
         #WHY DOES THAT RETURN TWO THINGS?  QUANTUM KEK
