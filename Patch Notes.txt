@@ -3,13 +3,12 @@ v1.6
 ############################## Planned Features ###############################
 
 ################################## Features ###################################
-
-################################ Improvements #################################
-Added patch notes for v1.5 to the patch notes.  Kinda forgot about them before.
-
 Added a setting to determine whether the treeview in the recipes window starts
  expanded or not.  I find myself not using it expanded ever, and it's annoying
  collapsing it all the time.
+
+################################ Improvements #################################
+Added patch notes for v1.5 to the patch notes.  Kinda forgot about them before.
 
 ################################## Bugfixes ###################################
 Fixed Relics, Prophecies, and any other random rarities of item, breaking a
