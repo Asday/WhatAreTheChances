@@ -33,10 +33,9 @@ class Main(wx.Frame):
             highest = 65
             extras = ""
 
-        if "stash_tabs_filter" in self._app.settings:
-            filtered = self._app.settings["stash_tabs_filter"]
-        else:
-            filtered = True
+        filtered = self._app.settings.get("stash_tabs_filter", True)
+        treeview_expanded = self._app.settings.get("treeview_expanded", True)
+        recipes = self._app.settings.get("recipes", {"alch": True, "chance": True})
 
         wx.Frame.__init__(self, parent = None, id = wx.ID_ANY, title = u"Settings :D", pos = wx.DefaultPosition, size = wx.Size(-1,-1), style = wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL)
         
@@ -53,12 +52,14 @@ class Main(wx.Frame):
         sizer_main.AddSpacer((0, 0), 1, wx.EXPAND, 5)
         
         sizer_centred = wx.BoxSizer(wx.VERTICAL)
-
+        
         group_league = wx.StaticBoxSizer(wx.StaticBox(self.panel_bg, wx.ID_ANY, u"League"), wx.VERTICAL)
         
-        self.choice_league = wx.Choice(self.panel_bg, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, [], 0)
+        choice_leagueChoices = []
+        self.choice_league = wx.Choice(group_league.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, choice_leagueChoices, 0)
         self.choice_league.SetSelection(999)
         self.choice_league.Enable(False)
+        
         group_league.Add(self.choice_league, 0, wx.ALL | wx.EXPAND, 5)
         
         
@@ -68,36 +69,53 @@ class Main(wx.Frame):
         sizer_centred.AddSpacer((0, 15), 0, 0, 5)
         
         self.check_filter = wx.CheckBox(self.panel_bg, wx.ID_ANY, u"Filter tabs?", wx.DefaultPosition, wx.DefaultSize, 0)
-        self.check_filter.SetValue(filtered)
+        self.check_filter.SetValue(filtered) 
         sizer_centred.Add(self.check_filter, 0, wx.ALL, 5)
-
         
         group_numbered = wx.StaticBoxSizer(wx.StaticBox(self.panel_bg, wx.ID_ANY, u"Numbered tabs to check:"), wx.HORIZONTAL)
         
-        self.static_from = wx.StaticText(self.panel_bg, wx.ID_ANY, u"From:", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.static_from = wx.StaticText(group_numbered.GetStaticBox(), wx.ID_ANY, u"From:", wx.DefaultPosition, wx.DefaultSize, 0)
         self.static_from.Wrap(-1)
         group_numbered.Add(self.static_from, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
         
-        self.spin_from = wx.SpinCtrl(self.panel_bg, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.SP_ARROW_KEYS, 0, 10000, lowest)
+        self.spin_from = wx.SpinCtrl(group_numbered.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.SP_ARROW_KEYS, 0, 10000, lowest)
         group_numbered.Add(self.spin_from, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
         
-        self.static_to = wx.StaticText(self.panel_bg, wx.ID_ANY, u"To:", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.static_to = wx.StaticText(group_numbered.GetStaticBox(), wx.ID_ANY, u"To:", wx.DefaultPosition, wx.DefaultSize, 0)
         self.static_to.Wrap(-1)
         group_numbered.Add(self.static_to, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
         
-        self.spin_to = wx.SpinCtrl(self.panel_bg, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.SP_ARROW_KEYS, 0, 10000, highest)
+        self.spin_to = wx.SpinCtrl(group_numbered.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.SP_ARROW_KEYS, 0, 10000, highest)
         group_numbered.Add(self.spin_to, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
         
         
-        sizer_centred.Add(group_numbered, 0, 0, 5)
+        sizer_centred.Add(group_numbered, 0, wx.EXPAND, 5)
         
         group_unnumbered = wx.StaticBoxSizer(wx.StaticBox(self.panel_bg, wx.ID_ANY, u"Other tabs to check (separated by commas):"), wx.VERTICAL)
         
-        self.text_unnumbered = wx.TextCtrl(self.panel_bg, wx.ID_ANY, extras, wx.DefaultPosition, wx.DefaultSize, 0)
+        self.text_unnumbered = wx.TextCtrl(group_unnumbered.GetStaticBox(), wx.ID_ANY, extras, wx.DefaultPosition, wx.DefaultSize, 0)
         group_unnumbered.Add(self.text_unnumbered, 0, wx.ALL | wx.EXPAND, 5)
         
         
         sizer_centred.Add(group_unnumbered, 0, wx.EXPAND, 5)
+        
+        group_recipes = wx.StaticBoxSizer(wx.StaticBox(self.panel_bg, wx.ID_ANY, u"Recipes to locate"), wx.HORIZONTAL)
+        
+        self.check_recipe_chance = wx.CheckBox(group_recipes.GetStaticBox(), wx.ID_ANY, u"Orb of Chance", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.check_recipe_chance.SetValue(recipes["chance"]) 
+        group_recipes.Add(self.check_recipe_chance, 0, wx.ALL, 5)
+        
+        self.check_recipe_alch = wx.CheckBox(group_recipes.GetStaticBox(), wx.ID_ANY, u"Orb of Alchemy", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.check_recipe_alch.SetValue(recipes["alch"]) 
+        group_recipes.Add(self.check_recipe_alch, 0, wx.ALL, 5)
+        
+        
+        sizer_centred.Add(group_recipes, 0, wx.EXPAND, 5)
+        
+        radio_treeview_stateChoices = [u"Expanded", u"Collapsed"]
+        self.radio_treeview_state = wx.RadioBox(self.panel_bg, wx.ID_ANY, u"Default TreeView state", wx.DefaultPosition, wx.DefaultSize, radio_treeview_stateChoices, 1, wx.RA_SPECIFY_ROWS)
+        self.radio_treeview_state.SetSelection(int(not treeview_expanded))
+        sizer_centred.Add(self.radio_treeview_state, 0, wx.EXPAND, 5)
         
         self.line_settings_actions = wx.StaticLine(self.panel_bg, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL)
         sizer_centred.Add(self.line_settings_actions, 0, wx.EXPAND | wx.ALL, 5)
@@ -153,9 +171,12 @@ class Main(wx.Frame):
         self.spin_from.Bind(wx.EVT_SPINCTRL, self._on_updated)
         self.spin_to.Bind(wx.EVT_SPINCTRL, self._on_updated)
         self.text_unnumbered.Bind(wx.EVT_TEXT, self._on_updated)
+        self.check_recipe_alch.Bind(wx.EVT_CHECKBOX, self._on_updated)
+        self.check_recipe_chance.Bind(wx.EVT_CHECKBOX, self._on_updated)
+        self.radio_treeview_state.Bind(wx.EVT_RADIOBOX, self._on_updated)
         self.button_check_for_updates.Bind(wx.EVT_BUTTON, self._on_check)
 
-    def _on_updated(self, event = None):
+    def _on_updated(self, event=None):
         self._updated = True
 
     def _on_idle(self, event):
@@ -168,6 +189,12 @@ class Main(wx.Frame):
             stash_tabs.extend(extras)
             league = self.choice_league.GetStringSelection()
             filter_tabs = self.check_filter.GetValue()
+            recipes = {
+                "alch": self.check_recipe_alch.GetValue(),
+                "chance": self.check_recipe_chance.GetValue(),
+                }
+            treeview_expanded = not bool(self.radio_treeview_state.GetSelection())
+
             if league:
                 self._app.settings["league"] = league
             self._app.settings["stash_tabs"] = stash_tabs
@@ -175,6 +202,8 @@ class Main(wx.Frame):
             self._app.settings["stash_tabs_highest"] = highest
             self._app.settings["stash_tabs_extras"] = extras
             self._app.settings["stash_tabs_filter"] = filter_tabs
+            self._app.settings["recipes"] = recipes
+            self._app.settings["treeview_expanded"] = treeview_expanded
             self._app.recheck_items()
             self._updated = False
 
