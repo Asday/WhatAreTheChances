@@ -46,6 +46,9 @@ _spacer = pygame.surface.Surface((1, _pad))
 #endregion
 
 def make_socket_preview(item):
+    if "links" not in item:
+        return pygame.surface.Surface((0, 0))
+
     colours = item["links"][::2] #"R-G-B W" -> "RGBW"
     links = item["links"][1::2]  #"R-G-B W" -> "-- "
     socketcount = len(colours)
@@ -161,8 +164,8 @@ class Main(wx.Frame):
         self.panel_items = wx.Panel(self.panel_bg, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
         grid_items = wx.GridSizer(0, 6, 0, 0)
         
-        self.previews = [[None for _ in xrange(3)] for __ in xrange(6)]
-        for y in xrange(3):
+        self.previews = [[None for _ in xrange(5)] for __ in xrange(6)]
+        for y in xrange(5):
             col = []
             for x in xrange(6):
                 preview = {}
@@ -284,8 +287,6 @@ class Main(wx.Frame):
         self.Refresh()
 
     def update_inventories(self, launch = False):
-        self.tree_inventories.DeleteChildren(self.tree_inventories.GetRootItem())
-        self.clear_previews()
 
         if self._app.inventories:
             self._app.lock.acquire()
@@ -297,9 +298,14 @@ class Main(wx.Frame):
                 self._on_show_updated()
             else:
                 self.button_show_updated.Show()
+                self.Layout()
 
     def _on_show_updated(self, event = None):
+        self.tree_inventories.DeleteChildren(self.tree_inventories.GetRootItem())
+        self.clear_previews()
+
         self.button_show_updated.Hide()
+        self.Layout()
 
         self.cache_itempreviews = {}
 
@@ -311,7 +317,8 @@ class Main(wx.Frame):
             for item in inventory:
                 self.tree_inventories.AppendItem(_i, item["name"] + " [" + item["_tab_label"] + "]")
 
-        self.tree_inventories.ExpandAll()
+        if self._app.settings.get("treeview_expanded", True):
+            self.tree_inventories.ExpandAll()
 
         top = self.tree_inventories.GetFirstChild(self.tree_inventories.rootid)[0] #KEK
         #WHY DOES THAT RETURN TWO THINGS?  QUANTUM KEK

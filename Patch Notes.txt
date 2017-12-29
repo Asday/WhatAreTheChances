@@ -1,3 +1,36 @@
+v1.6
+
+################################## Features ###################################
+Added a setting to determine whether the treeview in the recipes window starts
+ expanded or not.  I find myself not using it expanded ever, and it's annoying
+ collapsing it all the time.
+
+Added a setting to determine which recipes you want to search for.  This is
+ useful if, like me, you don't care about alchs, 'cause you've got them coming
+ out of your proverbial already.  Alchs take priority over chances.  This comes
+ with a reasonably major restructure of recipe-finding code, so if you find any
+ oddities, hit me up @Oddish ingame, or saraandzuka+watc@gmail.com.
+
+################################ Improvements #################################
+Added patch notes for v1.5 to the patch notes.  Kinda forgot about them before.
+
+################################## Bugfixes ###################################
+Fixed Relics, Prophecies, and any other random rarities of item, breaking a
+ thread.
+
+Fixed showing item previews of items with no sockets.
+
+Fixed new item info button being obscured behind the treeview.
+
+Fixed premature blanking of inventories and items upon new item info arriving.
+
+-------------------------------------------------------------------------------
+v1.5
+
+################################## Bugfixes ###################################
+Abyss sockets broke the recipe finder thread.  Fixed that.
+
+-------------------------------------------------------------------------------
 v1.4
 
 ############################## Planned Features ###############################

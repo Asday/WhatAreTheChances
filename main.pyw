@@ -3,6 +3,8 @@ import sys
 import threading
 import json
 import time
+from itertools import izip_longest
+from collections import defaultdict
 
 import wx
 
@@ -35,22 +37,6 @@ class SettingsWatcher(threading.Thread):
                 self.next_check -= 1
 
             time.sleep(1)
-
-def subdivide_recipes(itemlist):
-    itemlist = itemlist[:]
-    out = []
-    while itemlist:
-        recipe = []
-        item = itemlist.pop(0)
-        recipe.append(item)
-        while itemlist:
-            if itemlist[0]["name"] == recipe[0]["name"]:
-                item = itemlist.pop(0)
-                recipe.append(item)
-            else:
-                break
-        out.append(recipe)
-    return out
 
 def key_sort_recipe_by_tab(recipe):
     return min([int(item["inventoryId"][5:]) for item in recipe])
@@ -95,8 +81,7 @@ def fill_inventories(recipes):
 def key_tabname(item):
     return int(item["inventoryId"][5:])
 
-def inventorysort(itemlist):
-    recipes = subdivide_recipes(itemlist)
+def inventorysort(recipes):
     recipes.sort(key = key_sort_recipe_by_tab)
     inventories = fill_inventories(recipes)
 
@@ -105,38 +90,40 @@ def inventorysort(itemlist):
 def _nameorder(item):
     return item["name"]
 
-def chancerecipes(items):
-    #Get a count of each name in unignored stash tabs
-    items = [item for item in items if item["rarity"] == "Rare"]
+def name_matching_recipe(items, matchcount):
+    rares = [item for item in items if item["rarity"] == "Rare"]
+    remainder = [item for item in items if item["rarity"] != "Rare"]
 
-    names = [item["name"]
-                for item 
-                in items]
-
+    names = [item["name"] for item in rares]
     counts = [names.count(name) for name in names]
 
     for i, count in enumerate(counts):
-        items[i]["count"] = count
+        rares[i]["count"] = count
 
-    chances = [item
-               for item
-               in items
-               if item["count"] == 2]
-    alchs = [item
-             for item
-             in items
-             if item["count"] == 3]
-    chances.extend([item
-                    for item
-                    in items
-                    if item["count"] == 4])
+    candidates = [item for item in rares if item["count"] >= matchcount]
+    remainder += [item for item in rares if item["count"] < matchcount]
 
-    chances.sort(key = _nameorder)
-    alchs.sort(key = _nameorder)
+    by_name = defaultdict(list)
+    for item in candidates:
+        by_name[item["name"]].append(item)
 
-    recipes = alchs + chances
+    recipes = []
+    for items in by_name.itervalues():
+        chunked = list(izip_longest(*[items[i::matchcount] for i in range(matchcount)]))
+        if chunked[-1][-1] is None:
+            remainder += [item for item in chunked[-1] if item is not None]
+            chunked = chunked[:-1]
 
-    return inventorysort(recipes)
+        recipes.extend(chunked)
+
+    return (recipes, remainder)
+
+def alchrecipes(items):
+    return name_matching_recipe(items, 3)
+
+def chancerecipes(items):
+    return name_matching_recipe(items, 2)
+
 
 class Inventory(object):
     def __init__(self):
@@ -224,7 +211,19 @@ class AcquisitionThread(threading.Thread):
             items = res.items
             fname = res.fname
 
-            inventories = chancerecipes(items)
+            recipes_to_find = self._app.settings.get("recipes", {"alch": True, "chance": True})
+            
+            remaining_items = items
+
+            alchs = []
+            if recipes_to_find["alch"]:
+                alchs, remaining_items = alchrecipes(remaining_items)
+
+            chances = []
+            if recipes_to_find["chance"]:
+                chances, remaining_items = chancerecipes(remaining_items)
+
+            inventories = inventorysort(alchs + chances)
             
             #Notify the user?
             new = inventories

@@ -1,6 +1,7 @@
 import os
 import json
 import sqlite3
+from collections import defaultdict
 
 from result import Result
 
@@ -18,7 +19,10 @@ rarities = {
     4: "Gem",
     5: "Currency",
     6: "Card",
+    8: "Prophecy",
+    9: "Relic",
     }
+rarities = defaultdict(lambda: "fuck knows", **rarities)
 
 attr_to_col = {
     "G": "W",
