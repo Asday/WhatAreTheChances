@@ -300,9 +300,11 @@ class Main(wx.Frame):
                 self._on_show_updated()
             else:
                 self.button_show_updated.Show()
+                self.Layout()
 
     def _on_show_updated(self, event = None):
         self.button_show_updated.Hide()
+        self.Layout()
 
         self.cache_itempreviews = {}
 
