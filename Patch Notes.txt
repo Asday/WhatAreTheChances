@@ -1,11 +1,15 @@
 v1.6
 
-############################## Planned Features ###############################
-
 ################################## Features ###################################
 Added a setting to determine whether the treeview in the recipes window starts
  expanded or not.  I find myself not using it expanded ever, and it's annoying
  collapsing it all the time.
+
+Added a setting to determine which recipes you want to search for.  This is
+ useful if, like me, you don't care about alchs, 'cause you've got them coming
+ out of your proverbial already.  Alchs take priority over chances.  This comes
+ with a reasonably major restructure of recipe-finding code, so if you find any
+ oddities, hit me up @Oddish ingame, or saraandzuka+watc@gmail.com.
 
 ################################ Improvements #################################
 Added patch notes for v1.5 to the patch notes.  Kinda forgot about them before.

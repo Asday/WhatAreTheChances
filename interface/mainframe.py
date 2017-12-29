@@ -164,8 +164,8 @@ class Main(wx.Frame):
         self.panel_items = wx.Panel(self.panel_bg, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
         grid_items = wx.GridSizer(0, 6, 0, 0)
         
-        self.previews = [[None for _ in xrange(3)] for __ in xrange(6)]
-        for y in xrange(3):
+        self.previews = [[None for _ in xrange(5)] for __ in xrange(6)]
+        for y in xrange(5):
             col = []
             for x in xrange(6):
                 preview = {}
